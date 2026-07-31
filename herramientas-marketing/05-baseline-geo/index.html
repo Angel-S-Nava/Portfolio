@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseline GEO: ¿te menciona la IA? — navamkt</title>
+<meta name="description" content="No existe un Search Console para modelos de lenguaje. Este es el protocolo para medir si ChatGPT, Perplexity, Gemini, Claude y AI Overviews te mencionan — y si te citan con liga, que no es lo mismo.">
+<meta property="og:title" content="Baseline GEO: ¿te menciona la IA?">
+<meta property="og:description" content="Mide tu presencia en los cinco motores. Guarda el corte y compáralo el mes que viene.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:hsl(253 20% 4.5%); --srf:hsl(252 15% 7.5%); --srf2:hsl(252 13% 10.5%);
+  --line:hsl(250 30% 90% / .09); --ink:hsl(40 20% 95%); --mut:hsl(248 10% 62%);
+  --acc:#8B5CF6; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  --disp:'Outfit',system-ui,sans-serif;
+  --body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+html[data-theme="light"]{
+  --bg:hsl(40 30% 98.5%); --srf:hsl(0 0% 100%); --srf2:hsl(40 22% 95.5%);
+  --line:hsl(250 30% 15% / .11); --ink:hsl(250 20% 8%); --mut:hsl(248 8% 42%);
+  --ok:#059669; --warn:#b45309; --bad:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:color-mix(in srgb,var(--acc) 28%,transparent)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.disp{font-family:var(--disp);letter-spacing:-.03em;font-weight:700;line-height:1.1}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+
+.top{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.themebtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s}
+.themebtn:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 50%,transparent)}
+
+header{padding:64px 0 40px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:96px 100%;mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);pointer-events:none}
+header .wrap{position:relative}
+h1{font-size:clamp(30px,5vw,50px);margin:14px 0 18px;max-width:16ch}
+.sub{color:var(--mut);font-size:17px;max-width:62ch}
+.sub strong{color:var(--ink);font-weight:600}
+
+.card{background:var(--srf);border:1px solid var(--line);border-radius:16px;margin-bottom:16px;overflow:hidden}
+.chead{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.chead h2{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:-.01em}
+.chead p{color:var(--mut);font-size:12.5px;margin-top:2px}
+.cbody{padding:22px}
+
+/* ─── Configuración ─── */
+.setup{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.field label{display:block;margin-bottom:7px;font-size:13px;font-weight:500}
+.inp{width:100%;background:transparent;border:1px solid var(--line);border-radius:9px;padding:10px 13px;font-size:14px;font-family:var(--body);color:var(--ink);outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--acc)}
+
+/* ─── Matriz ─── */
+.scroller{overflow-x:auto}
+.mx{width:100%;border-collapse:collapse;min-width:660px}
+.mx th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);padding:12px 8px;border-bottom:1px solid var(--line);font-weight:500;text-align:center;white-space:nowrap}
+.mx th:first-child{text-align:left;padding-left:22px;width:44%}
+.mx td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center}
+.mx td:first-child{text-align:left;padding:10px 12px 10px 22px}
+.mx tr:last-child td{border-bottom:none}
+.qtext{width:100%;background:transparent;border:1px solid transparent;border-radius:7px;padding:7px 9px;font-size:13.5px;font-family:var(--body);color:var(--ink);outline:none;transition:border-color .2s,background .2s}
+.qtext:hover{background:var(--srf2)}
+.qtext:focus{border-color:var(--acc);background:var(--srf2)}
+.cell{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--mut);transition:all .16s}
+.cell:hover{border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
+.cell[data-s="1"]{background:color-mix(in srgb,var(--bad) 16%,transparent);border-color:color-mix(in srgb,var(--bad) 45%,transparent);color:var(--bad)}
+.cell[data-s="2"]{background:color-mix(in srgb,var(--warn) 16%,transparent);border-color:color-mix(in srgb,var(--warn) 45%,transparent);color:var(--warn)}
+.cell[data-s="3"]{background:color-mix(in srgb,var(--ok) 18%,transparent);border-color:color-mix(in srgb,var(--ok) 50%,transparent);color:var(--ok)}
+.rowdel{border:none;background:transparent;color:var(--mut);cursor:pointer;font-size:16px;line-height:1;padding:4px 8px;opacity:0;transition:opacity .18s,color .18s}
+.mx tr:hover .rowdel{opacity:1}
+.rowdel:hover{color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;padding:16px 22px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.04em}
+.legend div{display:flex;align-items:center;gap:7px}
+.legend i{width:17px;height:17px;border-radius:5px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+
+.btnrow{display:flex;gap:9px;flex-wrap:wrap}
+.pbtn{border:1px solid var(--line);background:transparent;color:var(--mut);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:10px 15px;border-radius:8px;cursor:pointer;transition:all .18s}
+.pbtn:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--ink)}
+.pbtn.main{background:var(--acc);border-color:var(--acc);color:#fff}
+.pbtn.main:hover{filter:brightness(1.12)}
+
+/* ─── Métricas ─── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.stat{padding:20px 22px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:9px}
+.stat .v{font-family:var(--disp);font-size:30px;font-weight:700;letter-spacing:-.035em;line-height:1}
+.stat .u{font-size:13px;color:var(--mut);font-family:var(--body);font-weight:400;letter-spacing:0}
+.stat .d{font-family:var(--mono);font-size:10.5px;color:var(--mut);margin-top:7px}
+.gap{padding:20px 22px;border-bottom:1px solid var(--line)}
+.gap p{color:var(--mut);font-size:13.5px;max-width:74ch}
+.gap strong{color:var(--ink);font-weight:600}
+
+/* ─── Barras por motor ─── */
+.eng{padding:18px 22px;border-bottom:1px solid var(--line)}
+.engrow{display:grid;grid-template-columns:96px 1fr 62px;align-items:center;gap:13px;margin-bottom:9px}
+.engrow:last-child{margin-bottom:0}
+.engrow span{font-size:12.5px}
+.engbar{height:8px;background:var(--srf2);border-radius:20px;overflow:hidden;display:flex}
+.engbar i{height:100%;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.engval{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right}
+
+/* ─── Competidores ─── */
+.comp{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--srf2)}
+.chip b{padding:8px 12px;font-size:13px;font-weight:500}
+.chip span{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--acc);padding:8px 11px;border-left:1px solid var(--line);min-width:38px;text-align:center}
+.chip button{border:none;border-left:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;padding:8px 11px;font-family:var(--mono);font-size:13px;line-height:1;transition:color .18s,background .18s}
+.chip button:hover{color:var(--ink);background:var(--srf)}
+.chip button.less:hover{color:var(--bad)}
+
+/* ─── Historial ─── */
+.hist{width:100%;border-collapse:collapse;font-size:13px}
+.hist th{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:left;padding:10px 22px;border-bottom:1px solid var(--line);font-weight:500}
+.hist th:not(:first-child),.hist td:not(:first-child){text-align:right}
+.hist td{padding:10px 22px;border-bottom:1px solid var(--line);color:var(--mut);font-family:var(--mono);font-size:12.5px}
+.hist tr:last-child td{border-bottom:none}
+.hist td:first-child{color:var(--ink)}
+.up{color:var(--ok)} .down{color:var(--bad)}
+.empty{padding:26px 22px;text-align:center;color:var(--mut);font-size:13px}
+
+/* ─── Método ─── */
+.method{margin:44px 0 0;padding:30px 0 0;border-top:1px solid var(--line)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:26px;margin-top:22px}
+.mgrid h4{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:8px}
+.mgrid p{color:var(--mut);font-size:13.5px}
+.mgrid ol,.mgrid ul{margin:9px 0 0;padding-left:18px;color:var(--mut);font-size:13px}
+.mgrid li{margin-bottom:6px}
+.mgrid li::marker{color:var(--acc)}
+.flag{background:var(--srf);border:1px solid var(--line);border-left:2px solid var(--warn);border-radius:12px;padding:22px;margin-top:30px}
+.flag h4{font-family:var(--disp);font-size:15px;font-weight:700;margin-bottom:9px}
+.flag p{color:var(--mut);font-size:13.5px;max-width:82ch}
+.flag p+p{margin-top:11px}
+.flag strong{color:var(--ink);font-weight:600}
+code{font-family:var(--mono);font-size:.87em;background:var(--srf2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--ink)}
+
+footer{margin-top:56px;border-top:1px solid var(--line);padding:36px 0 52px}
+.fgrid{display:flex;flex-wrap:wrap;gap:26px;justify-content:space-between;align-items:flex-end}
+.fcta h4{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em;margin-bottom:7px;max-width:30ch}
+.fcta p{color:var(--mut);font-size:13.5px;max-width:48ch;margin-bottom:16px}
+.btn{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;padding:12px 22px;border-radius:9px;transition:filter .2s}
+.btn:hover{filter:brightness(1.12)}
+.fmeta{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.05em;line-height:2}
+.fmeta a{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <a class="brand" href="https://navamkt.com"><span class="dot"></span>navamkt</a>
+  <button class="themebtn" id="theme" title="Cambiar tema" aria-label="Cambiar tema">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div></div>
+
+<header><div class="wrap">
+  <p class="lbl">Herramienta 05 · SEO + GEO</p>
+  <h1 class="disp">¿Te menciona la IA?</h1>
+  <p class="sub">No existe un Search Console para modelos de lenguaje. La única forma de medir tu presencia es correr las mismas preguntas cada mes y registrar qué pasó. Esto es el registro — y separa <strong>mención</strong> de <strong>cita con liga</strong>, que no son lo mismo y casi nadie las distingue.</p>
+</div></div></header>
+
+<div class="wrap">
+
+<div class="card">
+  <div class="chead"><div><h2>Tu contexto</h2><p>Rellena los huecos de las preguntas sugeridas.</p></div></div>
+  <div class="cbody">
+    <div class="setup">
+      <div class="field"><label for="marca">Tu marca</label><input class="inp" id="marca" value="Tu marca" placeholder="Nombre del negocio"></div>
+      <div class="field"><label for="cat">Categoría</label><input class="inp" id="cat" value="agencia de marketing" placeholder="a qué te dedicas"></div>
+      <div class="field"><label for="ciudad">Ciudad o zona</label><input class="inp" id="ciudad" value="Guadalajara" placeholder="dónde compites"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead">
+    <div><h2>La matriz</h2><p>Corre cada pregunta en cada motor y haz clic en la celda hasta el estado que corresponda.</p></div>
+    <div class="btnrow">
+      <button class="pbtn" id="addq">+ Pregunta</button>
+      <button class="pbtn" id="csv">Exportar CSV</button>
+    </div>
+  </div>
+  <div class="scroller">
+    <table class="mx">
+      <thead><tr>
+        <th>Pregunta de compra</th>
+        <th>ChatGPT</th><th>Perplexity</th><th>Gemini</th><th>Claude</th><th>AI Overviews</th><th></th>
+      </tr></thead>
+      <tbody id="mx"></tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <div><i>·</i>Sin correr</div>
+    <div><i style="background:color-mix(in srgb,var(--bad) 16%,transparent);border-color:color-mix(in srgb,var(--bad) 45%,transparent);color:var(--bad)">✕</i>No aparece</div>
+    <div><i style="background:color-mix(in srgb,var(--warn) 16%,transparent);border-color:color-mix(in srgb,var(--warn) 45%,transparent);color:var(--warn)">M</i>Mencionada sin liga</div>
+    <div><i style="background:color-mix(in srgb,var(--ok) 18%,transparent);border-color:color-mix(in srgb,var(--ok) 50%,transparent);color:var(--ok)">C</i>Citada con liga</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead"><div><h2>Tu corte</h2><p>Calculado solo sobre las celdas que ya corriste.</p></div></div>
+  <div class="stats">
+    <div class="stat"><div class="k">Cobertura</div><div class="v" id="cov">0<span class="u">%</span></div><div class="d" id="covd">0 de 0 celdas</div></div>
+    <div class="stat"><div class="k">Tasa de mención</div><div class="v" id="men">0<span class="u">%</span></div><div class="d">apareces de alguna forma</div></div>
+    <div class="stat"><div class="k">Tasa de cita</div><div class="v" id="cit">0<span class="u">%</span></div><div class="d">con liga a tu sitio</div></div>
+    <div class="stat"><div class="k">Brecha mención → cita</div><div class="v" id="brecha">—</div><div class="d">menciones por cada cita</div></div>
+  </div>
+  <div class="gap"><p id="lectura">Corre al menos una pregunta para ver la lectura.</p></div>
+  <div class="eng" id="eng"></div>
+</div>
+
+<div class="card">
+  <div class="chead">
+    <div><h2>Quién aparece en tu lugar</h2><p>Cada vez que veas un competidor en una respuesta, súmale uno. Esto es tu share of voice real.</p></div>
+    <div class="btnrow"><button class="pbtn" id="addc">+ Competidor</button></div>
+  </div>
+  <div class="cbody"><div class="comp" id="comp"></div></div>
+</div>
+
+<div class="card">
+  <div class="chead">
+    <div><h2>Historial</h2><p>Guarda el corte cada mes. Sin serie de tiempo no hay forma de mostrar movimiento.</p></div>
+    <div class="btnrow"><button class="pbtn main" id="snap">Guardar corte de hoy</button></div>
+  </div>
+  <div id="histbox"><p class="empty">Todavía no has guardado ningún corte.</p></div>
+</div>
+
+<section class="method">
+  <p class="lbl">El protocolo</p>
+  <div class="mgrid">
+    <div>
+      <h4>Cómo se corre</h4>
+      <ol>
+        <li>De 15 a 20 preguntas <strong style="color:var(--ink)">reales de compra</strong>, no keywords. La gente le habla a un modelo como le hablaría a un conocido.</li>
+        <li>Las mismas cinco superficies cada vez.</li>
+        <li>Sesión limpia, sin historial ni personalización.</li>
+        <li>Captura de pantalla fechada de cada respuesta.</li>
+        <li>Repite el <strong style="color:var(--ink)">mismo set</strong> cada mes. Cambiar las preguntas destruye la comparabilidad.</li>
+      </ol>
+    </div>
+    <div>
+      <h4>Mención no es cita</h4>
+      <p>Los datos de 2026 apuntan a que ChatGPT menciona marcas del orden de <strong style="color:var(--ink)">tres veces más</strong> de lo que las cita con liga.</p>
+      <p style="margin-top:10px">Un cliente puede estar ganando presencia real sin ver un solo clic de referral. Si no explicas esa diferencia desde el día uno, en el mes tres te va a preguntar dónde está el tráfico — y va a tener razón en preguntarlo.</p>
+    </div>
+    <div>
+      <h4>Qué mueve las citas de verdad</h4>
+      <p>La evidencia pública apunta a que el factor más correlacionado con ser citado son las <strong style="color:var(--ink)">menciones de marca en sitios de terceros</strong> — correlación reportada del orden de 0.66, contra 0.22 de los backlinks.</p>
+      <p style="margin-top:10px">Reddit aparece como la fuente más citada de forma transversal, y Wikipedia pesa muchísimo en ChatGPT.</p>
+      <p style="margin-top:10px">Consecuencia para el plan de trabajo: el peso está en PR digital, comunidades, directorios de industria y consistencia de entidad. <strong style="color:var(--ink)">No en tocar archivos de tu sitio.</strong></p>
+    </div>
+  </div>
+
+  <div class="flag">
+    <h4>Sobre <code>llms.txt</code> — léelo antes de que te lo vendan</h4>
+    <p>Ningún motor de IA importante usa <code>llms.txt</code> hoy. John Mueller de Google lo dijo públicamente en junio de 2025, Google lo reiteró en su guía de optimización para IA en junio de 2026, y la documentación de crawlers de OpenAI, Anthropic y Perplexity no lo menciona como factor de citación. Un análisis de 137,000 sitios encontró que el <strong>97% de los archivos <code>llms.txt</code> no recibió ni una sola petición</strong> en mayo de 2026.</p>
+    <p><strong>Publícalo de todos modos:</strong> cuesta poco, no daña, y tiene un uso real emergente — darle a los agentes autónomos que navegan sitios un mapa limpio. Pero si alguien te lo presenta como el mecanismo por el que ChatGPT te va a citar, esa parte no se sostiene con la evidencia de hoy.</p>
+    <p>Lo digo aquí sabiendo que es un argumento de venta cómodo y que renunciar a él cuesta. Es más barato que un prospecto informado lo verifique y te lo saque en una junta.</p>
+  </div>
+</section>
+</div>
+
+<footer><div class="wrap"><div class="fgrid">
+  <div class="fcta">
+    <h4 class="disp">El primer baseline es el entregable más visible que existe</h4>
+    <p>Si quieres, corro el set completo sobre tu marca y te mando las capturas fechadas con la lectura. Sin que tengas que contratar nada.</p>
+    <a class="btn" href="https://navamkt.com/es/contact">Hablemos</a>
+  </div>
+  <div class="fmeta">
+    <div>navamkt · <a href="https://navamkt.com">navamkt.com</a></div>
+    <div>Herramienta 05 de 8</div>
+    <div>Datos revisados: julio 2026</div>
+  </div>
+</div></div></footer>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const MOTORES = ['ChatGPT','Perplexity','Gemini','Claude','AI Overviews'];
+const ESTADOS = ['·','✕','M','C'];
+const LS = 'navamkt-geo';
+
+const PLANTILLAS = [
+  '¿Cuál es la mejor {cat} en {ciudad}?',
+  '¿Qué {cat} me recomiendas en {ciudad}?',
+  '{cat} confiable en {ciudad}',
+  '¿Cuánto cuesta contratar una {cat} en {ciudad}?',
+  'Comparativa de {cat} en {ciudad}',
+  'Mejores {cat} de México',
+  '¿{marca} es buena opción?',
+  'Opiniones sobre {marca}',
+  '¿Qué debo considerar antes de contratar una {cat}?',
+  '{cat} para negocios pequeños en {ciudad}',
+  'Alternativas a las {cat} tradicionales',
+  '¿Quién hace {cat} con reportes transparentes?'
+];
+
+let estado = cargar();
+
+function cargar(){
+  try {
+    const g = JSON.parse(localStorage.getItem(LS));
+    if (g && Array.isArray(g.preguntas)) return g;
+  } catch {}
+  return null;
+}
+
+function inicial(){
+  return {
+    marca: 'Tu marca', cat: 'agencia de marketing', ciudad: 'Guadalajara',
+    preguntas: PLANTILLAS.map(t => ({ t, c: Array(MOTORES.length).fill(0) })),
+    competidores: [], cortes: []
+  };
+}
+if (!estado) estado = inicial();
+
+function guardar(){ localStorage.setItem(LS, JSON.stringify(estado)); }
+
+const rellenar = t => t
+  .replace(/\{marca\}/g,  $('marca').value  || 'tu marca')
+  .replace(/\{cat\}/g,    $('cat').value    || 'tu categoría')
+  .replace(/\{ciudad\}/g, $('ciudad').value || 'tu ciudad');
+
+function pintarMatriz(){
+  $('mx').innerHTML = estado.preguntas.map((p, i) => `
+    <tr data-i="${i}">
+      <td><input class="qtext" value="${rellenar(p.t).replace(/"/g,'&quot;')}" data-i="${i}"></td>
+      ${p.c.map((s, j) => `<td><button class="cell" data-s="${s}" data-i="${i}" data-j="${j}" title="${MOTORES[j]}">${ESTADOS[s]}</button></td>`).join('')}
+      <td><button class="rowdel" data-del="${i}" title="Quitar">×</button></td>
+    </tr>`).join('');
+}
+
+function pintarMetricas(){
+  const celdas = estado.preguntas.flatMap(p => p.c);
+  const total  = celdas.length;
+  const corridas = celdas.filter(s => s > 0).length;
+  const menciones = celdas.filter(s => s >= 2).length;
+  const citas = celdas.filter(s => s === 3).length;
+
+  const pct = (a,b) => b ? Math.round((a/b)*100) : 0;
+  $('cov').innerHTML  = pct(corridas,total) + '<span class="u">%</span>';
+  $('covd').textContent = `${corridas} de ${total} celdas`;
+  $('men').innerHTML  = pct(menciones,corridas) + '<span class="u">%</span>';
+  $('cit').innerHTML  = pct(citas,corridas) + '<span class="u">%</span>';
+  $('brecha').textContent = citas ? (menciones/citas).toFixed(1) + '×' : (menciones ? '∞' : '—');
+
+  let txt;
+  if (!corridas) txt = 'Corre al menos una pregunta para ver la lectura.';
+  else if (!menciones) txt = `Corriste <strong>${corridas}</strong> celdas y no apareces en ninguna. No es un problema de sitio: los modelos te citan cuando otros hablan de ti. El trabajo está en menciones de terceros, no en tus archivos.`;
+  else if (!citas) txt = `Apareces en <strong>${menciones}</strong> respuestas pero <strong>ninguna te cita con liga</strong>. Estás ganando presencia sin ganar un solo clic. Es un avance real y es invisible en Analytics — anótalo así antes de que alguien te pregunte por el tráfico.`;
+  else {
+    const r = menciones/citas;
+    txt = `De cada <strong>${r.toFixed(1)} menciones</strong> obtienes una cita con liga. ` + (r > 3
+      ? 'Está por encima de la brecha típica: te nombran bastante más de lo que te enlazan. Cerrar esa distancia pasa por tener una fuente citable y consistente sobre tu marca en sitios de terceros.'
+      : 'Está dentro o por debajo de la brecha típica de alrededor de 3×, lo cual es buena señal: cuando te nombran, te enlazan.');
+  }
+  $('lectura').innerHTML = txt;
+
+  $('eng').innerHTML = MOTORES.map((m, j) => {
+    const col = estado.preguntas.map(p => p.c[j]);
+    const run = col.filter(s => s > 0).length;
+    const men = col.filter(s => s >= 2).length;
+    const cit = col.filter(s => s === 3).length;
+    const wC = run ? (cit/run)*100 : 0;
+    const wM = run ? ((men-cit)/run)*100 : 0;
+    return `<div class="engrow">
+      <span>${m}</span>
+      <div class="engbar"><i style="width:${wC}%;background:var(--ok)"></i><i style="width:${wM}%;background:var(--warn)"></i></div>
+      <span class="engval">${run ? Math.round(((men)/run)*100) + '%' : '—'}</span>
+    </div>`;
+  }).join('');
+}
+
+function pintarComp(){
+  $('comp').innerHTML = estado.competidores.length
+    ? estado.competidores.map((c, i) => `<span class="chip"><b>${c.n}</b><span>${c.v}</span><button data-c="${i}" data-d="1">+</button><button class="less" data-c="${i}" data-d="-1">−</button><button data-c="${i}" data-d="0">×</button></span>`).join('')
+    : '<p style="color:var(--mut);font-size:13px">Agrega los competidores que veas aparecer en las respuestas.</p>';
+}
+
+function pintarHist(){
+  if (!estado.cortes.length){ $('histbox').innerHTML = '<p class="empty">Todavía no has guardado ningún corte.</p>'; return; }
+  const filas = estado.cortes.map((c, i) => {
+    const prev = estado.cortes[i-1];
+    const flecha = (a, b) => {
+      if (!prev) return '';
+      const d = a - b;
+      if (d === 0) return ' <span style="opacity:.5">=</span>';
+      return ` <span class="${d>0?'up':'down'}">${d>0?'▲':'▼'}${Math.abs(d)}</span>`;
+    };
+    return `<tr><td>${c.f}</td><td>${c.cov}%</td><td>${c.men}%${flecha(c.men, prev&&prev.men)}</td><td>${c.cit}%${flecha(c.cit, prev&&prev.cit)}</td></tr>`;
+  }).join('');
+  $('histbox').innerHTML = `<table class="hist"><thead><tr><th>Corte</th><th>Cobertura</th><th>Mención</th><th>Cita</th></tr></thead><tbody>${filas}</tbody></table>`;
+}
+
+function pintar(){ pintarMetricas(); pintarComp(); pintarHist(); guardar(); }
+
+// Celdas de la matriz
+$('mx').addEventListener('click', e => {
+  const cell = e.target.closest('.cell');
+  if (cell){
+    const i = +cell.dataset.i, j = +cell.dataset.j;
+    estado.preguntas[i].c[j] = (estado.preguntas[i].c[j] + 1) % 4;
+    cell.dataset.s = estado.preguntas[i].c[j];
+    cell.textContent = ESTADOS[estado.preguntas[i].c[j]];
+    pintar();
+    return;
+  }
+  const del = e.target.closest('.rowdel');
+  if (del && estado.preguntas.length > 1){
+    estado.preguntas.splice(+del.dataset.del, 1);
+    pintarMatriz(); pintar();
+  }
+});
+$('mx').addEventListener('input', e => {
+  const t = e.target.closest('.qtext'); if (!t) return;
+  estado.preguntas[+t.dataset.i].t = t.value;
+  guardar();
+});
+
+$('addq').addEventListener('click', () => {
+  estado.preguntas.push({ t: '', c: Array(MOTORES.length).fill(0) });
+  pintarMatriz(); pintar();
+  const inputs = $('mx').querySelectorAll('.qtext');
+  inputs[inputs.length - 1].focus();
+});
+
+// Contexto: re-rellena las plantillas que no se hayan editado a mano
+['marca','cat','ciudad'].forEach(id => $(id).addEventListener('input', () => {
+  estado[id] = $(id).value;
+  pintarMatriz(); guardar();
+}));
+
+$('addc').addEventListener('click', () => {
+  const n = prompt('¿Qué competidor apareció?');
+  if (!n || !n.trim()) return;
+  estado.competidores.push({ n: n.trim().slice(0,40), v: 1 });
+  estado.competidores.sort((a,b) => b.v - a.v);
+  pintar();
+});
+$('comp').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const i = +b.dataset.c, d = +b.dataset.d;
+  if (d === 0) estado.competidores.splice(i,1);
+  else estado.competidores[i].v = Math.max(estado.competidores[i].v + d, 0);
+  estado.competidores.sort((a,b) => b.v - a.v);
+  pintar();
+});
+
+$('snap').addEventListener('click', () => {
+  const celdas = estado.preguntas.flatMap(p => p.c);
+  const corridas = celdas.filter(s => s > 0).length;
+  if (!corridas){ alert('Corre al menos una pregunta antes de guardar el corte.'); return; }
+  const pct = (a,b) => b ? Math.round((a/b)*100) : 0;
+  estado.cortes.push({
+    f: new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }),
+    cov: pct(corridas, celdas.length),
+    men: pct(celdas.filter(s => s >= 2).length, corridas),
+    cit: pct(celdas.filter(s => s === 3).length, corridas)
+  });
+  pintar();
+});
+
+$('csv').addEventListener('click', () => {
+  const cab = ['Pregunta', ...MOTORES].join(',');
+  const cuerpo = estado.preguntas.map(p =>
+    ['"' + rellenar(p.t).replace(/"/g,'""') + '"', ...p.c.map(s => ['sin correr','no aparece','mencionada','citada'][s])].join(',')
+  ).join('\n');
+  const blob = new Blob(['﻿' + cab + '\n' + cuerpo], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `baseline-geo-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// Arranque
+if (estado.marca)  $('marca').value  = estado.marca;
+if (estado.cat)    $('cat').value    = estado.cat;
+if (estado.ciudad) $('ciudad').value = estado.ciudad;
+pintarMatriz(); pintar();
+
+const guardadoTema = localStorage.getItem('navamkt-tema');
+if (guardadoTema) document.documentElement.dataset.theme = guardadoTema;
+$('theme').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('navamkt-tema', t);
+});
+})();
+</script>
+</body>
+</html>

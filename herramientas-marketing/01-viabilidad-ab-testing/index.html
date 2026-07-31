@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Tu sitio puede hacer A/B testing? — navamkt</title>
+<meta name="description" content="Calcula el tamaño de muestra y la duración real de un test A/B con el tráfico que ya tienes. Si no alcanza, te dice qué hacer en su lugar.">
+<meta property="og:title" content="¿Tu sitio puede hacer A/B testing?">
+<meta property="og:description" content="La mayoría de los sitios no tiene volumen para testear. Averígualo en 30 segundos, antes de contratar CRO.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:hsl(253 20% 4.5%); --srf:hsl(252 15% 7.5%); --srf2:hsl(252 13% 10.5%);
+  --line:hsl(250 30% 90% / .09); --ink:hsl(40 20% 95%); --mut:hsl(248 10% 62%);
+  --acc:#8B5CF6; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  --disp:'Outfit',system-ui,sans-serif;
+  --body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+html[data-theme="light"]{
+  --bg:hsl(40 30% 98.5%); --srf:hsl(0 0% 100%); --srf2:hsl(40 22% 95.5%);
+  --line:hsl(250 30% 15% / .11); --ink:hsl(250 20% 8%); --mut:hsl(248 8% 42%);
+  --ok:#059669; --warn:#b45309; --bad:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:color-mix(in srgb,var(--acc) 28%,transparent)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.disp{font-family:var(--disp);letter-spacing:-.03em;font-weight:700;line-height:1.1}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+
+/* ─── Barra superior ─── */
+.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.themebtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s}
+.themebtn:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 50%,transparent)}
+
+/* ─── Encabezado ─── */
+header{padding:64px 0 40px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:96px 100%;mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);pointer-events:none}
+header .wrap{position:relative}
+h1{font-size:clamp(30px,5vw,50px);margin:14px 0 18px;max-width:16ch}
+.sub{color:var(--mut);font-size:17px;max-width:58ch}
+.sub strong{color:var(--ink);font-weight:600}
+
+/* ─── Rejilla principal ─── */
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:20px;align-items:start;padding-bottom:20px}
+@media(max-width:880px){.grid{grid-template-columns:1fr}.grid .out{order:-1}}
+.card{background:var(--srf);border:1px solid var(--line);border-radius:16px;padding:24px}
+.card h2{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:2px}
+.cardnote{color:var(--mut);font-size:12.5px;margin-bottom:20px}
+
+/* ─── Campos ─── */
+.field{margin-bottom:17px}
+.field label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:7px}
+.field .name{font-size:13.5px;font-weight:500}
+.field .hint{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.04em}
+.inp{width:100%;background:transparent;border:1px solid var(--line);border-radius:9px;padding:10px 13px;font-size:14px;font-family:var(--mono);color:var(--ink);outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--acc)}
+.inp::-webkit-outer-spin-button,.inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inp[type=number]{-moz-appearance:textfield}
+.seg{display:flex;gap:5px;background:var(--srf2);border-radius:9px;padding:4px}
+.seg button{flex:1;border:none;background:transparent;color:var(--mut);font-family:var(--mono);font-size:11.5px;font-weight:500;padding:7px 4px;border-radius:6px;cursor:pointer;transition:background .18s,color .18s}
+.seg button[aria-pressed="true"]{background:var(--acc);color:#fff}
+.adv{margin-top:4px;border-top:1px solid var(--line);padding-top:16px}
+.adv summary{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);cursor:pointer;list-style:none;user-select:none}
+.adv summary::-webkit-details-marker{display:none}
+.adv summary::before{content:'+ ';color:var(--acc)}
+.adv[open] summary::before{content:'− '}
+.adv > div{padding-top:16px}
+
+/* ─── Panel de resultado ─── */
+.out{background:var(--srf);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.verdict{padding:26px 26px 22px;border-bottom:1px solid var(--line);position:relative}
+.verdict::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--vc,var(--acc))}
+.vtag{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--vc,var(--acc));margin-bottom:11px}
+.vtag i{width:7px;height:7px;border-radius:50%;background:var(--vc,var(--acc));display:block}
+.vhead{font-family:var(--disp);font-size:clamp(21px,3vw,27px);font-weight:700;letter-spacing:-.02em;line-height:1.22;margin-bottom:9px}
+.vbody{color:var(--mut);font-size:14px;max-width:62ch}
+.vbody strong{color:var(--ink);font-weight:600}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+@media(max-width:560px){.stats{grid-template-columns:1fr}}
+.stat{padding:20px 22px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:none}
+@media(max-width:560px){.stat{border-right:none;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:none}}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);margin-bottom:9px}
+.stat .v{font-family:var(--disp);font-size:29px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.stat .u{font-size:13px;color:var(--mut);font-family:var(--body);font-weight:400;letter-spacing:0}
+
+/* ─── Barra de duración ─── */
+.bar{padding:22px 26px;border-bottom:1px solid var(--line)}
+.bartop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
+.bartrack{height:9px;background:var(--srf2);border-radius:20px;position:relative;overflow:hidden}
+.barfill{height:100%;border-radius:20px;background:var(--vc,var(--acc));width:0;transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.barmark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);opacity:.55}
+.barlegend{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--mut);letter-spacing:.05em}
+
+/* ─── Tabla de sensibilidad ─── */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:left;padding:11px 22px;border-bottom:1px solid var(--line);font-weight:500}
+.tbl td{padding:11px 22px;border-bottom:1px solid var(--line);color:var(--mut);font-family:var(--mono);font-size:12.5px}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td:first-child{color:var(--ink);font-weight:500}
+.tbl tr.hit td{background:color-mix(in srgb,var(--acc) 9%,transparent)}
+.tbl tr.hit td:first-child{color:var(--acc)}
+.pill{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:2px 7px;border-radius:5px;border:1px solid currentColor}
+.p-ok{color:var(--ok)} .p-warn{color:var(--warn)} .p-bad{color:var(--bad)}
+.tblhead{padding:20px 22px 4px}
+.tblhead h3{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:3px}
+.tblhead p{color:var(--mut);font-size:12.5px}
+
+/* ─── Plan alterno ─── */
+.alt{padding:22px 26px;background:var(--srf2)}
+.alt h3{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:10px}
+.alt ol{margin:0;padding-left:19px;color:var(--mut);font-size:13.5px}
+.alt li{margin-bottom:7px}
+.alt li::marker{color:var(--acc);font-family:var(--mono);font-size:12px}
+.alt li strong{color:var(--ink);font-weight:600}
+
+/* ─── Método ─── */
+.method{margin:44px 0 0;padding:30px 0 0;border-top:1px solid var(--line)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px;margin-top:22px}
+.mgrid h4{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:8px}
+.mgrid p{color:var(--mut);font-size:13.5px}
+code{font-family:var(--mono);font-size:.87em;background:var(--srf2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--ink)}
+pre{background:var(--srf);border:1px solid var(--line);border-radius:11px;padding:17px 19px;overflow-x:auto;margin:14px 0 0}
+pre code{background:none;border:none;padding:0;font-size:12.5px;line-height:1.75;color:var(--mut)}
+
+/* ─── Pie ─── */
+footer{margin-top:56px;border-top:1px solid var(--line);padding:36px 0 52px}
+.fgrid{display:flex;flex-wrap:wrap;gap:26px;justify-content:space-between;align-items:flex-end}
+.fcta h4{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em;margin-bottom:7px;max-width:26ch}
+.fcta p{color:var(--mut);font-size:13.5px;max-width:46ch;margin-bottom:16px}
+.btn{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;padding:12px 22px;border-radius:9px;transition:filter .2s}
+.btn:hover{filter:brightness(1.12)}
+.fmeta{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.05em;line-height:2}
+.fmeta a{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <a class="brand" href="https://navamkt.com"><span class="dot"></span>navamkt</a>
+  <button class="themebtn" id="theme" title="Cambiar tema" aria-label="Cambiar tema">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div></div>
+
+<header><div class="wrap">
+  <p class="lbl">Herramienta 01 · CRO</p>
+  <h1 class="disp">¿Tu sitio puede hacer A/B testing?</h1>
+  <p class="sub">La mayoría no puede, y casi nadie lo revisa antes de contratar el servicio. Pon tu tráfico real y te digo <strong>cuánto tardaría el test</strong> — y si no sale, qué hacer en su lugar.</p>
+</div></div></header>
+
+<div class="wrap">
+<div class="grid">
+
+  <form class="card" id="f" autocomplete="off">
+    <h2>Tus números</h2>
+    <p class="cardnote">Los saco de GA4: usuarios y conversiones de los últimos 30 días.</p>
+
+    <div class="field">
+      <label for="visitas"><span class="name">Visitas al mes</span><span class="hint">a la página del test</span></label>
+      <input class="inp" type="number" id="visitas" value="20000" min="100" step="100">
+    </div>
+
+    <div class="field">
+      <label for="tasa"><span class="name">Tasa de conversión actual</span><span class="hint">%</span></label>
+      <input class="inp" type="number" id="tasa" value="3" min="0.05" max="70" step="0.05">
+    </div>
+
+    <div class="field">
+      <label for="lift"><span class="name">Mejora que quieres detectar</span><span class="hint">% relativo</span></label>
+      <input class="inp" type="number" id="lift" value="10" min="1" max="200" step="1">
+    </div>
+
+    <div class="field">
+      <label><span class="name">Variantes del test</span><span class="hint">control incluido</span></label>
+      <div class="seg" id="vars">
+        <button type="button" data-v="2" aria-pressed="true">2</button>
+        <button type="button" data-v="3" aria-pressed="false">3</button>
+        <button type="button" data-v="4" aria-pressed="false">4</button>
+      </div>
+    </div>
+
+    <details class="adv">
+      <summary>Parámetros estadísticos</summary>
+      <div>
+        <div class="field">
+          <label><span class="name">Nivel de confianza</span><span class="hint">1 − α</span></label>
+          <div class="seg" id="conf">
+            <button type="button" data-z="1.64485" aria-pressed="false">90%</button>
+            <button type="button" data-z="1.95996" aria-pressed="true">95%</button>
+            <button type="button" data-z="2.57583" aria-pressed="false">99%</button>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label><span class="name">Potencia estadística</span><span class="hint">1 − β</span></label>
+          <div class="seg" id="pow">
+            <button type="button" data-z="0.84162" aria-pressed="true">80%</button>
+            <button type="button" data-z="1.28155" aria-pressed="false">90%</button>
+          </div>
+        </div>
+      </div>
+    </details>
+  </form>
+
+  <div class="out">
+    <div class="verdict" id="v">
+      <span class="vtag" id="vtag"><i></i><span>Calculando</span></span>
+      <h2 class="vhead" id="vhead">—</h2>
+      <p class="vbody" id="vbody"></p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">Visitas por variante</div><div class="v" id="s1">—</div></div>
+      <div class="stat"><div class="k">Conversiones por variante</div><div class="v" id="s2">—</div></div>
+      <div class="stat"><div class="k">Duración</div><div class="v" id="s3">—<span class="u"> sem</span></div></div>
+    </div>
+
+    <div class="bar">
+      <div class="bartop"><span class="lbl">Duración contra el techo de 8 semanas</span><span class="lbl" id="barpct"></span></div>
+      <div class="bartrack"><div class="barfill" id="barfill"></div><div class="barmark" id="barmark" style="left:66.6%"></div></div>
+      <div class="barlegend"><span>0</span><span>8 semanas</span><span>12+</span></div>
+    </div>
+
+    <div class="tblhead">
+      <h3>Qué sí puedes detectar con este tráfico</h3>
+      <p>La fila marcada es la mejora más pequeña que cabe en 8 semanas.</p>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Mejora</th><th>Visitas/variante</th><th>Duración</th><th>Veredicto</th></tr></thead>
+      <tbody id="sens"></tbody>
+    </table>
+
+    <div class="alt" id="alt" hidden>
+      <h3>Con este volumen, esto es lo que sí funciona</h3>
+      <ol>
+        <li><strong>Auditoría de fricción.</strong> Heatmaps y grabaciones — mínimo 100 sesiones antes de concluir nada. Encuentras lo que está roto, no lo que está &laquo;mejorable&raquo;.</li>
+        <li><strong>Correcciones que no necesitan test.</strong> Formularios que fallan en móvil, CTAs invisibles, enlaces rotos, pasos duplicados en el checkout. Eso se arregla y ya.</li>
+        <li><strong>Análisis del funnel por paso.</strong> Dónde se cae la gente, con el dato de GA4. Un paso que pierde 60% no necesita significancia estadística para justificar que lo toques.</li>
+        <li><strong>Investigación cualitativa.</strong> Cinco entrevistas a clientes recientes rinden más que un test que nunca va a cerrar.</li>
+      </ol>
+      <p style="margin-top:13px;color:var(--mut);font-size:13px">Es el mismo trabajo útil con la etiqueta correcta. Quien te venda A/B testing con este tráfico te va a entregar un &laquo;ganador&raquo; que es ruido.</p>
+    </div>
+  </div>
+</div>
+
+<section class="method">
+  <p class="lbl">Método</p>
+  <div class="mgrid">
+    <div>
+      <h4>De dónde sale el tamaño de muestra</h4>
+      <p>Prueba de dos proporciones a dos colas. La misma fórmula que usan Evan Miller, Optimizely y VWO en sus calculadoras públicas.</p>
+      <pre><code>n = (Zα/2 + Zβ)² · [p₁(1−p₁) + p₂(1−p₂)]
+    ─────────────────────────────────
+              (p₂ − p₁)²
+
+p₁ = tasa actual
+p₂ = p₁ · (1 + mejora)</code></pre>
+    </div>
+    <div>
+      <h4>Los dos topes que casi nadie aplica</h4>
+      <p><strong style="color:var(--ink)">Piso de 100 conversiones por variante.</strong> Por debajo de eso, un ganador es ruido aunque el cálculo diga que ya alcanzaste la muestra. Cuando este piso manda sobre la fórmula, la herramienta lo marca.</p>
+      <p style="margin-top:10px"><strong style="color:var(--ink)">Techo de 8 semanas.</strong> Más allá, la estacionalidad y la pérdida de cookies contaminan el resultado. Y el mínimo son 2 semanas: menos no captura un ciclo semanal completo.</p>
+    </div>
+    <div>
+      <h4>Lo que esta calculadora no hace</h4>
+      <p>No corrige por comparaciones múltiples. Con 3 o 4 variantes, la probabilidad de un falso positivo sube por encima del α que elegiste — la corrección de Bonferroni pediría dividir α entre el número de comparaciones y eso engorda la muestra.</p>
+      <p style="margin-top:10px">Tampoco contempla tests secuenciales ni métodos bayesianos, que permiten mirar el resultado antes sin romper la validez.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<footer><div class="wrap"><div class="fgrid">
+  <div class="fcta">
+    <h4 class="disp">¿Te salió rojo y aún así quieres subir la conversión?</h4>
+    <p>Es el caso más común. Escríbeme con el resultado que te dio y te digo qué haría yo primero con ese sitio — sin que tengas que contratar nada.</p>
+    <a class="btn" href="https://navamkt.com/es/contact">Hablemos</a>
+  </div>
+  <div class="fmeta">
+    <div>navamkt · <a href="https://navamkt.com">navamkt.com</a></div>
+    <div>Herramienta 01 de 8</div>
+    <div>Datos revisados: julio 2026</div>
+  </div>
+</div></div></footer>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const SEM_MES = 4.345;      // semanas por mes
+  const TECHO   = 8;          // semanas máximas de un test válido
+  const PISO    = 2;          // mínimo para cubrir un ciclo semanal
+  const CONV_MIN= 100;        // conversiones por variante antes de leer nada
+
+  let variantes = 2, zA = 1.95996, zB = 0.84162;
+
+  // Tamaño de muestra por variante, prueba de dos proporciones
+  function muestra(p1, lift){
+    const p2 = Math.min(p1 * (1 + lift), 0.999);
+    const d  = p2 - p1;
+    if (d <= 0) return Infinity;
+    return Math.ceil(((zA + zB) ** 2 * (p1 * (1 - p1) + p2 * (1 - p2))) / (d * d));
+  }
+
+  function evaluar(p1, lift, visitasSem){
+    const nStat  = muestra(p1, lift);
+    const nPiso  = Math.ceil(CONV_MIN / p1);
+    const n      = Math.max(nStat, nPiso);
+    const semanas= (n * variantes) / visitasSem;
+    return { n, nStat, nPiso, mandaPiso: nPiso > nStat, semanas: Math.max(semanas, PISO), crudas: semanas };
+  }
+
+  const nf = new Intl.NumberFormat('es-MX');
+  const fmt = n => !isFinite(n) ? '∞' : n >= 1e6 ? (n/1e6).toFixed(1).replace('.0','') + 'M' : nf.format(Math.round(n));
+
+  function pintar(){
+    const visitas = Math.max(+$('visitas').value || 0, 1);
+    const p1      = Math.min(Math.max((+$('tasa').value || 0) / 100, 0.0005), 0.7);
+    const lift    = Math.max((+$('lift').value || 0) / 100, 0.005);
+    const visSem  = visitas / SEM_MES;
+
+    const r = evaluar(p1, lift, visSem);
+
+    $('s1').textContent = fmt(r.n);
+    $('s2').textContent = fmt(r.n * p1);
+    $('s3').innerHTML   = (r.semanas > 99 ? '99+' : r.semanas.toFixed(1)) + '<span class="u"> sem</span>';
+
+    // Veredicto
+    let color, tag, head, body;
+    if (r.semanas <= TECHO){
+      color = 'var(--ok)'; tag = 'Sí puedes testear';
+      head  = `Un test de ${(lift*100).toFixed(0)}% cierra en ${r.semanas.toFixed(1)} semanas`;
+      body  = r.mandaPiso
+        ? `La estadística pura pedía <strong>${fmt(r.nStat)}</strong> visitas por variante, pero con esa muestra apenas juntarías ${Math.round(r.nStat*p1)} conversiones. Mandé el número a <strong>${fmt(r.n)}</strong> para respetar el piso de ${CONV_MIN} conversiones por variante. Ese piso es el que manda aquí.`
+        : `Necesitas <strong>${fmt(r.n)}</strong> visitas y <strong>${fmt(r.n*p1)}</strong> conversiones por variante. Con ${nf.format(visitas)} visitas al mes repartidas entre ${variantes} variantes, entra cómodamente dentro del techo de 8 semanas.`;
+    } else if (r.semanas <= 12){
+      color = 'var(--warn)'; tag = 'Al límite';
+      head  = `Tardaría ${r.semanas.toFixed(1)} semanas — se pasa del techo`;
+      body  = `Un test que corre más de 8 semanas empieza a mezclar estacionalidad y pérdida de cookies en el resultado. Estás cerca: o subes el objetivo a una mejora más grande, o mandas más tráfico a esa página antes de arrancar.`;
+    } else {
+      color = 'var(--bad)'; tag = 'No es testeable';
+      head  = `Con este tráfico, el test tardaría ${r.semanas > 99 ? 'más de 99' : r.semanas.toFixed(0)} semanas`;
+      body  = `Eso son <strong>${(r.semanas/4.345).toFixed(1)} meses</strong> corriendo un solo test. Para cuando termine, la respuesta ya no aplica al negocio que tenías cuando lo lanzaste. No es un problema de herramienta ni de agencia: no hay volumen.`;
+    }
+    $('v').style.setProperty('--vc', color);
+    $('vtag').lastElementChild.textContent = tag;
+    $('vhead').textContent = head;
+    $('vbody').innerHTML   = body;
+
+    // Barra: 12 semanas ocupan el ancho completo, el techo cae en 66.6%
+    const pct = Math.min(r.semanas / 12, 1) * 100;
+    $('barfill').style.width = pct + '%';
+    $('barpct').textContent = r.semanas > 99 ? 'fuera de escala' : r.semanas.toFixed(1) + ' sem';
+
+    // Tabla de sensibilidad
+    const filas = [5,10,15,20,30,50,75];
+    let menorQueEntra = null;
+    const html = filas.map(L => {
+      const e = evaluar(p1, L/100, visSem);
+      if (e.semanas <= TECHO && menorQueEntra === null) menorQueEntra = L;
+      const cls = e.semanas <= TECHO ? 'p-ok' : e.semanas <= 12 ? 'p-warn' : 'p-bad';
+      const txt = e.semanas <= TECHO ? 'entra' : e.semanas <= 12 ? 'al límite' : 'no';
+      const dur = e.semanas > 99 ? '99+ sem' : e.semanas.toFixed(1) + ' sem';
+      const hit = (menorQueEntra === L) ? ' class="hit"' : '';
+      return `<tr${hit}><td>+${L}%</td><td>${fmt(e.n)}</td><td>${dur}</td><td><span class="pill ${cls}">${txt}</span></td></tr>`;
+    }).join('');
+    $('sens').innerHTML = html + (menorQueEntra === null
+      ? `<tr><td colspan="4" style="color:var(--bad)">Ninguna mejora razonable cabe en 8 semanas con este tráfico.</td></tr>` : '');
+
+    $('alt').hidden = r.semanas <= TECHO;
+  }
+
+  // Segmentados
+  document.querySelectorAll('.seg').forEach(seg => {
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      if (seg.id === 'vars') variantes = +b.dataset.v;
+      if (seg.id === 'conf') zA = +b.dataset.z;
+      if (seg.id === 'pow')  zB = +b.dataset.z;
+      pintar();
+    });
+  });
+  $('f').addEventListener('input', pintar);
+
+  // Tema
+  const guardado = localStorage.getItem('navamkt-tema');
+  if (guardado) document.documentElement.dataset.theme = guardado;
+  $('theme').addEventListener('click', () => {
+    const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('navamkt-tema', t);
+  });
+
+  pintar();
+})();
+</script>
+</body>
+</html>

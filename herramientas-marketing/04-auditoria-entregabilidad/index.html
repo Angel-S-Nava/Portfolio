@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoría de entregabilidad de correo en frío — navamkt</title>
+<meta name="description" content="20 chequeos sobre infraestructura, lista, envío y contenido. Te dice por qué tus correos caen en spam, ordenado por impacto.">
+<meta property="og:title" content="¿Por qué tus correos en frío caen en spam?">
+<meta property="og:description" content="Auditoría de 20 puntos. El diagnóstico sale ordenado por impacto, no por orden de aparición.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:hsl(253 20% 4.5%); --srf:hsl(252 15% 7.5%); --srf2:hsl(252 13% 10.5%);
+  --line:hsl(250 30% 90% / .09); --ink:hsl(40 20% 95%); --mut:hsl(248 10% 62%);
+  --acc:#8B5CF6; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  --disp:'Outfit',system-ui,sans-serif;
+  --body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+html[data-theme="light"]{
+  --bg:hsl(40 30% 98.5%); --srf:hsl(0 0% 100%); --srf2:hsl(40 22% 95.5%);
+  --line:hsl(250 30% 15% / .11); --ink:hsl(250 20% 8%); --mut:hsl(248 8% 42%);
+  --ok:#059669; --warn:#b45309; --bad:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:color-mix(in srgb,var(--acc) 28%,transparent)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.disp{font-family:var(--disp);letter-spacing:-.03em;font-weight:700;line-height:1.1}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+
+.top{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.themebtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s}
+.themebtn:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 50%,transparent)}
+
+header{padding:64px 0 40px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:96px 100%;mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);pointer-events:none}
+header .wrap{position:relative}
+h1{font-size:clamp(30px,5vw,50px);margin:14px 0 18px;max-width:18ch}
+.sub{color:var(--mut);font-size:17px;max-width:62ch}
+.sub strong{color:var(--ink);font-weight:600}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:22px;align-items:start;padding-bottom:20px}
+@media(max-width:940px){.grid{grid-template-columns:1fr}.panel{order:-1;position:static!important}}
+
+/* ─── Preguntas ─── */
+.sect{margin-bottom:14px;background:var(--srf);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.secthead{padding:17px 22px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.secthead h2{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:-.01em}
+.secthead span{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut)}
+.q{padding:17px 22px;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:none}
+.q p{font-size:14px;margin-bottom:11px;display:flex;gap:9px;align-items:flex-start}
+.q p b{font-family:var(--mono);font-size:11px;color:var(--mut);flex-shrink:0;padding-top:3px;min-width:20px}
+.opts{display:flex;flex-wrap:wrap;gap:7px;padding-left:29px}
+.opts button{border:1px solid var(--line);background:transparent;color:var(--mut);font-family:var(--body);font-size:12.5px;padding:7px 13px;border-radius:8px;cursor:pointer;transition:all .18s}
+.opts button:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--ink)}
+.opts button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.q.done p b{color:var(--acc)}
+
+/* ─── Panel de resultado ─── */
+.panel{position:sticky;top:78px;background:var(--srf);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.scorebox{padding:24px 22px;border-bottom:1px solid var(--line);text-align:center;position:relative}
+.ring{width:132px;height:132px;margin:0 auto 14px;position:relative}
+.ring svg{transform:rotate(-90deg);display:block}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ring .bgc{stroke:var(--srf2)}
+.ring .fgc{stroke:var(--sc,var(--acc));transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1),stroke .3s}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .num b{font-family:var(--disp);font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1}
+.ring .num s{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);text-decoration:none;margin-top:3px}
+.grade{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--sc,var(--acc));margin-bottom:5px}
+.gnote{color:var(--mut);font-size:12.5px;max-width:30ch;margin:0 auto}
+.prog{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-top:14px}
+
+.finds{max-height:min(52vh,520px);overflow-y:auto}
+.findhead{padding:15px 20px 4px}
+.findhead h3{font-family:var(--disp);font-size:13.5px;font-weight:700}
+.findhead p{color:var(--mut);font-size:12px}
+.find{padding:13px 20px;border-bottom:1px solid var(--line);display:flex;gap:11px;align-items:flex-start}
+.find:last-child{border-bottom:none}
+.find i{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:7px;display:block}
+.find h4{font-size:13px;font-weight:600;margin-bottom:3px;line-height:1.4}
+.find p{color:var(--mut);font-size:12.5px;line-height:1.55}
+.find .sev{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-left:7px}
+.empty{padding:26px 20px;text-align:center;color:var(--mut);font-size:13px}
+.panelfoot{padding:15px 20px;border-top:1px solid var(--line);display:flex;gap:9px}
+.pbtn{flex:1;border:1px solid var(--line);background:transparent;color:var(--mut);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:10px;border-radius:8px;cursor:pointer;transition:all .18s}
+.pbtn:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--ink)}
+.pbtn.main{background:var(--acc);border-color:var(--acc);color:#fff}
+.pbtn.main:hover{filter:brightness(1.12)}
+
+/* ─── Referencias ─── */
+.method{margin:44px 0 0;padding:30px 0 0;border-top:1px solid var(--line)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:26px;margin-top:22px}
+.mgrid h4{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:8px}
+.mgrid p{color:var(--mut);font-size:13.5px}
+.bench{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+.bench th{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:left;padding:8px 0;border-bottom:1px solid var(--line);font-weight:500}
+.bench td{padding:8px 0;border-bottom:1px solid var(--line);color:var(--mut);font-family:var(--mono);font-size:12px}
+.bench td:first-child{color:var(--ink);font-family:var(--body);font-size:13px}
+code{font-family:var(--mono);font-size:.87em;background:var(--srf2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--ink)}
+
+footer{margin-top:56px;border-top:1px solid var(--line);padding:36px 0 52px}
+.fgrid{display:flex;flex-wrap:wrap;gap:26px;justify-content:space-between;align-items:flex-end}
+.fcta h4{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em;margin-bottom:7px;max-width:30ch}
+.fcta p{color:var(--mut);font-size:13.5px;max-width:48ch;margin-bottom:16px}
+.btn{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;padding:12px 22px;border-radius:9px;transition:filter .2s}
+.btn:hover{filter:brightness(1.12)}
+.fmeta{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.05em;line-height:2}
+.fmeta a{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <a class="brand" href="https://navamkt.com"><span class="dot"></span>navamkt</a>
+  <button class="themebtn" id="theme" title="Cambiar tema" aria-label="Cambiar tema">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div></div>
+
+<header><div class="wrap">
+  <p class="lbl">Herramienta 04 · Outbound</p>
+  <h1 class="disp">¿Por qué tus correos en frío caen en spam?</h1>
+  <p class="sub">Veinte chequeos sobre infraestructura, lista, envío y contenido. El diagnóstico sale <strong>ordenado por impacto</strong>: lo primero de la lista es lo que más te está costando, no lo más fácil de arreglar.</p>
+</div></div></header>
+
+<div class="wrap">
+<div class="grid">
+  <div id="audit"></div>
+
+  <aside class="panel">
+    <div class="scorebox" id="sbox">
+      <div class="ring">
+        <svg width="132" height="132" viewBox="0 0 132 132">
+          <circle class="bgc" cx="66" cy="66" r="57"></circle>
+          <circle class="fgc" id="arc" cx="66" cy="66" r="57" stroke-dasharray="358.14" stroke-dashoffset="358.14"></circle>
+        </svg>
+        <div class="num"><b id="score">—</b><s>de 100</s></div>
+      </div>
+      <div class="grade" id="grade">Sin evaluar</div>
+      <p class="gnote" id="gnote">Responde los chequeos y el diagnóstico se arma solo.</p>
+      <p class="prog" id="prog">0 de 20 respondidas</p>
+    </div>
+
+    <div class="findhead">
+      <h3>Hallazgos</h3>
+      <p>Ordenados por lo que te cuestan.</p>
+    </div>
+    <div class="finds" id="finds"><p class="empty">Todavía no hay nada que reportar.</p></div>
+
+    <div class="panelfoot">
+      <button class="pbtn main" id="copiar">Copiar diagnóstico</button>
+      <button class="pbtn" id="reset">Reiniciar</button>
+    </div>
+  </aside>
+</div>
+
+<section class="method">
+  <p class="lbl">Contra qué se compara</p>
+  <div class="mgrid">
+    <div>
+      <h4>Los números que definen "normal"</h4>
+      <table class="bench">
+        <thead><tr><th>Métrica</th><th>Referencia</th></tr></thead>
+        <tbody>
+          <tr><td>Respuesta a correo en frío</td><td>3.4% promedio</td></tr>
+          <tr><td>Campaña buena</td><td>4-8%</td></tr>
+          <tr><td>Campaña excepcional</td><td>arriba de 10%</td></tr>
+          <tr><td>Rebote: deja de enviar</td><td>arriba de 3%</td></tr>
+          <tr><td>Longitud que mejor rinde</td><td>50-125 palabras</td></tr>
+          <tr><td>Toques por secuencia</td><td>3-5</td></tr>
+          <tr><td>Calentamiento de dominio</td><td>4-6 semanas</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--mut);font-size:12px;margin-top:12px">Rangos de respuesta según los reportes públicos de 2026 de <a href="https://instantly.ai/cold-email-benchmark-report-2026" rel="nofollow noopener" target="_blank" style="color:var(--acc)">Instantly</a>, <a href="https://woodpecker.co/blog/cold-email-statistics/" rel="nofollow noopener" target="_blank" style="color:var(--acc)">Woodpecker</a> y <a href="https://snov.io/blog/cold-email-statistics/" rel="nofollow noopener" target="_blank" style="color:var(--acc)">Snov.io</a>. Varían entre datasets: tómalos como orden de magnitud, no como una meta.</p>
+    </div>
+    <div>
+      <h4>El error de medición más común</h4>
+      <p>Un escáner de rebotes que solo lee <code>INBOX</code> reporta 0% de forma estructural. No porque no haya rebotes: porque nunca los ve. Si lees el correo desde el móvil, los mensajes salen de INBOX antes de que el script pase.</p>
+      <p style="margin-top:10px">Es un fallo silencioso y caro. Un buzón puede tener un mensaje en INBOX y cuarenta y uno en la papelera. Mientras tanto, direcciones que rebotaron cuatro veces siguen en rotación porque el sistema nunca se enteró.</p>
+    </div>
+    <div>
+      <h4>Autenticación perfecta no es entregabilidad</h4>
+      <p>SPF, DKIM y DMARC pueden pasar los tres, el Return-Path alinear, no haber HTML ni links, y un analizador neutral darle 10/10 al mensaje — y Gmail mandarlo a spam igual.</p>
+      <p style="margin-top:10px">Cuando pasa eso, ya no queda nada que arreglar dentro del mensaje: lo que se está castigando es la reputación del dominio. Y la reputación no se repara mientras sigas enviando desde ese dominio.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<footer><div class="wrap"><div class="fgrid">
+  <div class="fcta">
+    <h4 class="disp">Esta auditoría sale de haberla hecho sobre 814 correos propios</h4>
+    <p>Incluidos los hallazgos que no salieron bien. Si quieres, corro el test de colocación sobre tus plantillas reales y te digo dónde están cayendo. Sin que tengas que contratar nada.</p>
+    <a class="btn" href="https://navamkt.com/es/contact">Hablemos</a>
+  </div>
+  <div class="fmeta">
+    <div>navamkt · <a href="https://navamkt.com">navamkt.com</a></div>
+    <div>Herramienta 04 de 8</div>
+    <div>Datos revisados: julio 2026</div>
+  </div>
+</div></div></footer>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+
+const AUDIT = [
+{g:'Infraestructura', qs:[
+  {id:'dominio', w:12, q:'¿Desde qué dominio sales en frío?', o:[
+    {t:'Mi dominio principal', v:0, f:'Sales en frío desde tu dominio de marca. Es el daño más caro de la lista: cada correo que cae en spam castiga la reputación del mismo dominio con el que mandas propuestas y facturas. Lo estándar es exactamente lo contrario — un dominio de envío aparte que redirija al principal, para que el daño nunca toque a la marca.'},
+    {t:'Uno separado que redirige', v:12}]},
+  {id:'relay', w:10, q:'¿Por dónde sale el correo?', o:[
+    {t:'El correo de mi hosting', v:0, f:'Un relay de hosting comparte reputación de IP con miles de clientes que no controlas ni conoces. Si alguno manda spam, lo pagas tú. Es también el origen típico de rebotes firmados por el relay y no por el destinatario. Buzones en Google Workspace o Microsoft 365 cuestan poco y aíslan tu reputación.'},
+    {t:'Google Workspace o M365', v:10},
+    {t:'Plataforma con IP dedicada', v:10}]},
+  {id:'spf', w:5, q:'¿Tienes SPF publicado?', o:[
+    {t:'No o no sé', v:0, f:'Sin SPF, cualquier servidor del mundo puede afirmar que envía en tu nombre. Es el chequeo más barato de arreglar: un registro TXT en el DNS.'},
+    {t:'Sí', v:5}]},
+  {id:'dkim', w:5, q:'¿Tienes DKIM firmando?', o:[
+    {t:'No o no sé', v:0, f:'Sin DKIM el mensaje viaja sin firma criptográfica y Gmail lo trata como no autenticado. Junto con SPF es el mínimo para que te consideren siquiera.'},
+    {t:'Sí', v:5}]},
+  {id:'dmarc', w:5, q:'¿Y DMARC?', o:[
+    {t:'No tengo', v:0, f:'Sin DMARC no recibes reportes de quién manda en tu nombre, ni le dices al receptor qué hacer con lo que no autentica. Empieza en p=none para observar.'},
+    {t:'Sí, en p=none', v:3, f:'Tu DMARC está en p=none, que solo observa y no protege. Cuando lleves unas semanas leyendo los reportes sin sorpresas, súbelo a quarantine.'},
+    {t:'quarantine o reject', v:5}]},
+  {id:'warmup', w:10, q:'¿Calentaste el dominio antes de enviar?', o:[
+    {t:'No', v:0, f:'Un dominio que arranca mandando cientos de correos al día se quema en la primera semana. El calentamiento son 4 a 6 semanas: 10 a 20 diarios la primera, subiendo poco a poco. No hay atajo, y cada día que no arranca recorre la fecha en que empiezas a ver resultados.'},
+    {t:'Está en curso', v:5, f:'Vas bien. No aceleres el volumen antes de tiempo aunque no veas rebotes — el daño de reputación se manifiesta tarde, cuando ya se hizo.'},
+    {t:'Sí, 4-6 semanas', v:10}]},
+  {id:'postmaster', w:4, q:'¿Diste de alta el dominio en Google Postmaster Tools?', o:[
+    {t:'No', v:0, f:'Postmaster Tools es la única forma de ver tu reputación de dominio y tu tasa de queja reales ante Gmail. Es gratis y se da de alta en 15 minutos. Sin eso estás optimizando a ciegas.'},
+    {t:'Sí', v:4}]}
+]},
+{g:'La lista', qs:[
+  {id:'verif', w:8, q:'¿Verificas las direcciones antes de enviar?', o:[
+    {t:'No', v:0, f:'Sin verificación previa, la lista arrastra erratas scrapeadas de sitios web y direcciones placeholder de plantillas. Cada una es un rebote duro que le cuesta reputación al dominio, y son sorprendentemente frecuentes.'},
+    {t:'Sí', v:8}]},
+  {id:'rol', w:6, q:'¿Qué proporción son direcciones de rol (info@, contacto@)?', o:[
+    {t:'Más del 40%', v:0, f:'Una lista mayoritariamente de buzones de rol genera quejas: nadie se siente destinatario personal de info@, y algunos de esos buzones están conectados a colas de abuso que ingestan tu correo como reporte.'},
+    {t:'Entre 15 y 40%', v:3, f:'Todavía hay bastante dirección de rol. Prioriza contactos nominales: cambia la tasa de respuesta y baja las quejas.'},
+    {t:'Menos del 15%', v:6}]},
+  {id:'rebote', w:8, q:'¿Cuál es tu tasa de rebote?', o:[
+    {t:'No la sé', v:0, f:'Este es el dato que más gente cree tener y no tiene. Antes de nada, verifica que tu escáner lea todas las carpetas del buzón: si solo lee INBOX, va a reportar 0% para siempre.'},
+    {t:'Arriba de 3%', v:0, f:'Por encima del 3% la recomendación estándar es dejar de enviar y limpiar la lista antes de seguir. Cada envío adicional en ese estado profundiza el daño.'},
+    {t:'Entre 1 y 3%', v:4, f:'Zona tolerable pero no cómoda. El objetivo es debajo del 1%, y se llega verificando la lista antes de cargarla.'},
+    {t:'Debajo de 1%', v:8}]},
+  {id:'supresion', w:7, q:'¿Suprimes automáticamente los rebotes duros?', o:[
+    {t:'No', v:0, f:'Si un rebote duro sigue en rotación, se le vuelve a escribir. Es la forma más tonta de quemar reputación: mandar correos a direcciones que ya confirmaron no existir, una y otra vez.'},
+    {t:'Sí', v:7}]},
+  {id:'dedupe', w:5, q:'¿Deduplicas por dirección entre campañas?', o:[
+    {t:'No', v:0, f:'Sin dedupe por dirección, una persona inscrita en dos campañas recibe el doble de toques. Ahí es donde una secuencia de 4 plantillas acaba entregando ocho o nueve correos a la misma persona.'},
+    {t:'Sí', v:5}]}
+]},
+{g:'El envío', qs:[
+  {id:'volumen', w:6, q:'¿Cuántos correos manda cada buzón al día?', o:[
+    {t:'Más de 50', v:0, f:'Más de 50 diarios por buzón es territorio de plataforma de envío masivo, no de correo uno a uno. Reparte entre más buzones o baja el ritmo.'},
+    {t:'Entre 20 y 50', v:3, f:'Es defendible si el dominio ya está caliente y la lista está limpia. Con dominio nuevo, todavía no.'},
+    {t:'Menos de 20', v:6}]},
+  {id:'tope', w:5, q:'¿Hay un tope de correos de por vida por dirección?', o:[
+    {t:'No', v:0, f:'Sin tope, la gente se reinscribe en campañas nuevas y termina recibiendo ocho o nueve correos tuyos. Cuatro de por vida es un máximo razonable, y se implementa en media hora.'},
+    {t:'Sí, cuatro o menos', v:5}]},
+  {id:'unsub', w:4, q:'¿Incluyes List-Unsubscribe?', o:[
+    {t:'No', v:0, f:'Sin List-Unsubscribe, quien te quiere fuera de su bandeja solo tiene un botón a la mano: marcar como spam. Le estás forzando la peor señal posible.'},
+    {t:'Sí, mailto', v:2, f:'Tienes la forma antigua. Gmail pide one-click (List-Unsubscribe-Post más URL HTTPS) por encima de 5,000 correos diarios; debajo de eso no es obligatorio, pero si vas a migrar de dominio conviene montarlo bien de una vez.'},
+    {t:'Sí, one-click', v:4}]},
+  {id:'carpetas', w:6, q:'¿Qué carpetas lee tu escáner de rebotes y respuestas?', o:[
+    {t:'Solo INBOX', v:0, f:'Tu escáner está ciego. Si lees y borras el correo desde el móvil, los mensajes salen de INBOX antes de que el script pase, y el sistema reporta cero rebotes de forma estructural. Hay que escanear INBOX más papelera más spam.'},
+    {t:'INBOX, papelera y spam', v:6},
+    {t:'No tengo escáner', v:0, f:'Sin lectura automática del buzón no tienes tasa de rebote ni de respuesta reales, y estás decidiendo sobre plantillas y listas a partir de una sensación.'}]}
+]},
+{g:'El contenido', qs:[
+  {id:'gatillo', w:5, q:'¿Aparece "gratis", "sin costo" o "free" en tus plantillas?', o:[
+    {t:'Sí', v:0, f:'Están entre los términos más penalizados por los filtros de contenido, y pesan más si ya arrastras reputación negativa. La oferta puede seguir siendo sin costo; solo hay que decirlo de otra forma: "te lo mando y ya", "sin que tengas que contratar nada".'},
+    {t:'No', v:5}]},
+  {id:'largo', w:4, q:'¿Cuánto miden tus correos?', o:[
+    {t:'Más de 200 palabras', v:0, f:'El rango que mejor rinde de forma consistente en los reportes públicos es 50 a 125 palabras. Arriba de 200 la respuesta cae. En frío, cada párrafo extra es una razón más para cerrar sin contestar.'},
+    {t:'Entre 125 y 200', v:2, f:'Aceptable, pero el rango que mejor rinde sigue siendo 50 a 125 palabras.'},
+    {t:'Entre 50 y 125', v:4}]},
+  {id:'links', w:4, q:'¿Metes links en el primer correo?', o:[
+    {t:'Sí', v:0, f:'Un link en el primer correo en frío es de las señales más fáciles de penalizar, y encima no lo necesitas: guárdalo para cuando conteste.'},
+    {t:'No', v:4}]},
+  {id:'perso', w:8, q:'¿Qué tan personalizado es cada correo?', o:[
+    {t:'Nombre y ciudad', v:0, f:'{nombre} y {ciudad} no son personalización: son campos de plantilla. Los datos públicos de 2026 ubican el outreach basado en una señal concreta entre 5 y 18% de respuesta, contra 1 a 3% del genérico. Es la palanca de copy más grande que existe — pero solo sirve después de arreglar la entregabilidad, porque un correo excelente en la carpeta de spam sigue sin leerse.'},
+    {t:'Algún dato de la empresa', v:4, f:'Vas en la dirección correcta. El salto grande está en mencionar algo que tuviste que mirar para saberlo: un hallazgo de su sitio, un cambio reciente, algo que no salga de un CSV.'},
+    {t:'Un hallazgo concreto y verificable', v:8}]}
+]}];
+
+const respuestas = {};
+const TOTAL_Q = AUDIT.reduce((s,g) => s + g.qs.length, 0);
+
+// Pinta el cuestionario
+let n = 0;
+$('audit').innerHTML = AUDIT.map(g => `
+  <section class="sect">
+    <div class="secthead"><h2>${g.g}</h2><span>${g.qs.length} chequeos</span></div>
+    ${g.qs.map(q => {
+      n++;
+      return `<div class="q" data-q="${q.id}">
+        <p><b>${String(n).padStart(2,'0')}</b><span>${q.q}</span></p>
+        <div class="opts" role="group">
+          ${q.o.map((o,i) => `<button type="button" data-i="${i}" aria-pressed="false">${o.t}</button>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </section>`).join('');
+
+const buscar = id => {
+  for (const g of AUDIT) { const q = g.qs.find(x => x.id === id); if (q) return q; }
+};
+
+function calcular(){
+  const ids = Object.keys(respuestas);
+  const contestadas = ids.length;
+
+  let obt = 0, maxResp = 0;
+  const hallazgos = [];
+
+  ids.forEach(id => {
+    const q = buscar(id);
+    const o = q.o[respuestas[id]];
+    obt += o.v; maxResp += q.w;
+    if (o.f) hallazgos.push({ perdido: q.w - o.v, texto: o.f, pregunta: q.q });
+  });
+
+  const score = maxResp ? Math.round((obt / maxResp) * 100) : 0;
+  const completo = contestadas === TOTAL_Q;
+
+  // Anillo
+  const C = 2 * Math.PI * 57;
+  $('arc').setAttribute('stroke-dashoffset', contestadas ? C * (1 - score/100) : C);
+  $('score').textContent = contestadas ? score : '—';
+  $('prog').textContent = `${contestadas} de ${TOTAL_Q} respondidas`;
+
+  let color, grado, nota;
+  if (!contestadas){ color='var(--acc)'; grado='Sin evaluar'; nota='Responde los chequeos y el diagnóstico se arma solo.'; }
+  else if (score >= 85){ color='var(--ok)';   grado='Infraestructura sólida'; nota='Lo que te falta es copy y señal concreta, no entregabilidad.'; }
+  else if (score >= 65){ color='var(--warn)'; grado='Con fugas';              nota='Llegas a la bandeja, pero estás pagando un impuesto evitable en cada envío.'; }
+  else if (score >= 40){ color='var(--warn)'; grado='En riesgo';              nota='Vas camino a que el dominio se queme. Los hallazgos de arriba son los urgentes.'; }
+  else                 { color='var(--bad)';  grado='Vas a spam';             nota='Con este perfil, la tasa de respuesta no mide tu copy: mide cuánta gente revisa su carpeta de spam.'; }
+
+  $('sbox').style.setProperty('--sc', color);
+  $('grade').textContent = grado;
+  $('gnote').textContent = completo || !contestadas ? nota : nota + ' Puntaje sobre lo respondido hasta ahora.';
+
+  hallazgos.sort((a,b) => b.perdido - a.perdido);
+  $('finds').innerHTML = hallazgos.length ? hallazgos.map(h => {
+    const sev = h.perdido >= 8 ? ['var(--bad)','crítico'] : h.perdido >= 5 ? ['var(--warn)','alto'] : ['var(--mut)','medio'];
+    return `<div class="find"><i style="background:${sev[0]}"></i><div>
+      <h4>${h.pregunta}<span class="sev" style="color:${sev[0]}">${sev[1]}</span></h4>
+      <p>${h.texto}</p></div></div>`;
+  }).join('') : `<p class="empty">${contestadas ? 'Nada que reportar en lo respondido hasta ahora.' : 'Todavía no hay nada que reportar.'}</p>`;
+}
+
+$('audit').addEventListener('click', e => {
+  const b = e.target.closest('.opts button'); if (!b) return;
+  const fila = b.closest('.q');
+  fila.querySelectorAll('.opts button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  fila.classList.add('done');
+  respuestas[fila.dataset.q] = +b.dataset.i;
+  calcular();
+});
+
+$('reset').addEventListener('click', () => {
+  Object.keys(respuestas).forEach(k => delete respuestas[k]);
+  document.querySelectorAll('.q').forEach(f => {
+    f.classList.remove('done');
+    f.querySelectorAll('.opts button').forEach(x => x.setAttribute('aria-pressed','false'));
+  });
+  calcular();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+$('copiar').addEventListener('click', async () => {
+  const ids = Object.keys(respuestas);
+  if (!ids.length) return;
+  const lineas = ['AUDITORÍA DE ENTREGABILIDAD — ' + new Date().toLocaleDateString('es-MX'), ''];
+  lineas.push('Puntaje: ' + $('score').textContent + '/100 — ' + $('grade').textContent, '');
+  lineas.push('HALLAZGOS, DE MAYOR A MENOR IMPACTO', '');
+  document.querySelectorAll('.find').forEach((f,i) => {
+    lineas.push(`${i+1}. [${f.querySelector('.sev').textContent}] ${f.querySelector('h4').firstChild.textContent}`);
+    lineas.push('   ' + f.querySelector('p').textContent, '');
+  });
+  lineas.push('—', 'Generado con la herramienta de navamkt · navamkt.com');
+  try {
+    await navigator.clipboard.writeText(lineas.join('\n'));
+    const b = $('copiar'); const antes = b.textContent;
+    b.textContent = 'Copiado'; setTimeout(() => b.textContent = antes, 1800);
+  } catch { alert('Tu navegador bloqueó el portapapeles. Selecciona los hallazgos a mano.'); }
+});
+
+const guardado = localStorage.getItem('navamkt-tema');
+if (guardado) document.documentElement.dataset.theme = guardado;
+$('theme').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('navamkt-tema', t);
+});
+
+calcular();
+})();
+</script>
+</body>
+</html>

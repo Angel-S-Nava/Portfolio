@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuánto cuesta de verdad la API de WhatsApp — navamkt</title>
+<meta name="description" content="Estimador de costos de WhatsApp Business API por categoría de mensaje. Casi todo lo que responde un bot es gratis; el costo aparece cuando el negocio escribe primero.">
+<meta property="og:title" content="Cuánto cuesta de verdad la API de WhatsApp">
+<meta property="og:description" content="Servicio, utility y marketing se cobran distinto. Estima tu factura mensual con las tarifas que tú verifiques.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:hsl(253 20% 4.5%); --srf:hsl(252 15% 7.5%); --srf2:hsl(252 13% 10.5%);
+  --line:hsl(250 30% 90% / .09); --ink:hsl(40 20% 95%); --mut:hsl(248 10% 62%);
+  --acc:#8B5CF6; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  --disp:'Outfit',system-ui,sans-serif;
+  --body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+html[data-theme="light"]{
+  --bg:hsl(40 30% 98.5%); --srf:hsl(0 0% 100%); --srf2:hsl(40 22% 95.5%);
+  --line:hsl(250 30% 15% / .11); --ink:hsl(250 20% 8%); --mut:hsl(248 8% 42%);
+  --ok:#059669; --warn:#b45309; --bad:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:color-mix(in srgb,var(--acc) 28%,transparent)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.disp{font-family:var(--disp);letter-spacing:-.03em;font-weight:700;line-height:1.1}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+
+.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.themebtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s}
+.themebtn:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 50%,transparent)}
+
+header{padding:64px 0 40px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:96px 100%;mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);pointer-events:none}
+header .wrap{position:relative}
+h1{font-size:clamp(30px,5vw,50px);margin:14px 0 18px;max-width:17ch}
+.sub{color:var(--mut);font-size:17px;max-width:60ch}
+.sub strong{color:var(--ink);font-weight:600}
+
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:20px;align-items:start;padding-bottom:20px}
+@media(max-width:880px){.grid{grid-template-columns:1fr}.grid .out{order:-1}}
+.card{background:var(--srf);border:1px solid var(--line);border-radius:16px;padding:24px}
+.card h2{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:2px}
+.cardnote{color:var(--mut);font-size:12.5px;margin-bottom:20px}
+.sect{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:24px 0 14px;padding-top:18px;border-top:1px solid var(--line)}
+
+.field{margin-bottom:16px}
+.field label{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:7px}
+.field .name{font-size:13.5px;font-weight:500}
+.field .hint{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.04em}
+.inp{width:100%;background:transparent;border:1px solid var(--line);border-radius:9px;padding:10px 13px;font-size:14px;font-family:var(--mono);color:var(--ink);outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--acc)}
+.inp::-webkit-outer-spin-button,.inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inp[type=number]{-moz-appearance:textfield}
+.money{position:relative}
+.money .sign{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--mut);pointer-events:none}
+.money .inp{padding-left:34px}
+input[type=range]{width:100%;accent-color:var(--acc);margin-top:4px}
+
+.out{background:var(--srf);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.verdict{padding:26px 26px 22px;border-bottom:1px solid var(--line);position:relative}
+.verdict::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc)}
+.vtag{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:11px}
+.vtag i{width:7px;height:7px;border-radius:50%;background:var(--acc);display:block}
+.vhead{font-family:var(--disp);font-size:clamp(26px,4vw,40px);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-bottom:9px}
+.vhead .cur{font-size:.45em;color:var(--mut);font-weight:400;letter-spacing:0;margin-left:6px}
+.vbody{color:var(--mut);font-size:14px;max-width:64ch}
+.vbody strong{color:var(--ink);font-weight:600}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+@media(max-width:560px){.stats{grid-template-columns:1fr}}
+.stat{padding:20px 22px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:none}
+@media(max-width:560px){.stat{border-right:none;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:none}}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);margin-bottom:9px}
+.stat .v{font-family:var(--disp);font-size:27px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.stat .u{font-size:13px;color:var(--mut);font-family:var(--body);font-weight:400;letter-spacing:0}
+
+/* ─── Barra apilada por categoría ─── */
+.split{padding:24px 26px;border-bottom:1px solid var(--line)}
+.sptrack{display:flex;height:34px;border-radius:9px;overflow:hidden;background:var(--srf2)}
+.sp{position:relative;transition:width .5s cubic-bezier(.2,.8,.2,1);min-width:0}
+.sp span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.splegend{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px}
+.splegend div{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--mut)}
+.splegend i{width:9px;height:9px;border-radius:3px;display:block}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:left;padding:11px 22px;border-bottom:1px solid var(--line);font-weight:500}
+.tbl th:not(:first-child),.tbl td:not(:first-child){text-align:right}
+.tbl td{padding:11px 22px;border-bottom:1px solid var(--line);color:var(--mut);font-family:var(--mono);font-size:12.5px}
+.tbl td:first-child{color:var(--ink);font-weight:500;font-family:var(--body)}
+.tbl tr.total td{border-bottom:none;color:var(--ink);font-weight:700;background:var(--srf2)}
+.tblhead{padding:20px 22px 4px}
+.tblhead h3{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:3px}
+.tblhead p{color:var(--mut);font-size:12.5px}
+.free{color:var(--ok)}
+
+.note{padding:20px 26px;background:var(--srf2);display:flex;gap:14px;align-items:flex-start}
+.note svg{flex-shrink:0;margin-top:2px;color:var(--warn)}
+.note p{color:var(--mut);font-size:13px}
+.note strong{color:var(--ink);font-weight:600}
+
+.method{margin:44px 0 0;padding:30px 0 0;border-top:1px solid var(--line)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px;margin-top:22px}
+.mgrid h4{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:8px}
+.mgrid p{color:var(--mut);font-size:13.5px}
+.mgrid ul{margin:9px 0 0;padding-left:17px;color:var(--mut);font-size:13px}
+.mgrid li{margin-bottom:5px}
+.mgrid li::marker{color:var(--acc)}
+code{font-family:var(--mono);font-size:.87em;background:var(--srf2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--ink)}
+
+footer{margin-top:56px;border-top:1px solid var(--line);padding:36px 0 52px}
+.fgrid{display:flex;flex-wrap:wrap;gap:26px;justify-content:space-between;align-items:flex-end}
+.fcta h4{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em;margin-bottom:7px;max-width:28ch}
+.fcta p{color:var(--mut);font-size:13.5px;max-width:46ch;margin-bottom:16px}
+.btn{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;padding:12px 22px;border-radius:9px;transition:filter .2s}
+.btn:hover{filter:brightness(1.12)}
+.fmeta{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.05em;line-height:2}
+.fmeta a{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <a class="brand" href="https://navamkt.com"><span class="dot"></span>navamkt</a>
+  <button class="themebtn" id="theme" title="Cambiar tema" aria-label="Cambiar tema">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div></div>
+
+<header><div class="wrap">
+  <p class="lbl">Herramienta 03 · IA Conversacional</p>
+  <h1 class="disp">Cuánto cuesta de verdad la API de WhatsApp</h1>
+  <p class="sub">WhatsApp cobra <strong>por mensaje de plantilla entregado</strong>, y el precio depende de la categoría. Un bot que contesta a quien le escribe primero opera casi todo en la ventana gratuita. El costo aparece cuando el negocio inicia la conversación.</p>
+</div></div></header>
+
+<div class="wrap">
+<div class="grid">
+
+  <form class="card" id="f" autocomplete="off">
+    <h2>Tu volumen</h2>
+    <p class="cardnote">Si ya tienes WhatsApp Business, exporta las conversaciones de los últimos 3 meses y saca el promedio.</p>
+
+    <div class="field">
+      <label for="entrantes"><span class="name">Conversaciones entrantes / mes</span><span class="hint">el cliente escribe primero</span></label>
+      <input class="inp" type="number" id="entrantes" value="800" min="0" step="50">
+    </div>
+
+    <div class="field">
+      <label for="utility"><span class="name">Mensajes de utility / mes</span><span class="hint">confirmaciones, pedidos</span></label>
+      <input class="inp" type="number" id="utility" value="400" min="0" step="50">
+    </div>
+
+    <div class="field">
+      <label for="marketing"><span class="name">Mensajes de marketing / mes</span><span class="hint">promocionales</span></label>
+      <input class="inp" type="number" id="marketing" value="300" min="0" step="50">
+    </div>
+
+    <div class="field">
+      <label for="ctwa"><span class="name">De esos, iniciados por anuncio</span><span class="hint"><b id="ctwaVal">0</b>%</span></label>
+      <input type="range" id="ctwa" value="0" min="0" max="100" step="5">
+      <p style="color:var(--mut);font-size:11.5px;margin-top:6px">Los anuncios click-to-WhatsApp no cobran las primeras 72 horas.</p>
+    </div>
+
+    <p class="sect">Tarifas — verifícalas hoy</p>
+
+    <div class="field">
+      <label for="tMkt"><span class="name">Marketing</span><span class="hint">USD / mensaje</span></label>
+      <div class="money"><span class="sign">US$</span><input class="inp" type="number" id="tMkt" value="0.0436" min="0" step="0.0001"></div>
+    </div>
+
+    <div class="field">
+      <label for="tUtil"><span class="name">Utility</span><span class="hint">USD / mensaje</span></label>
+      <div class="money"><span class="sign">US$</span><input class="inp" type="number" id="tUtil" value="0.0065" min="0" step="0.0001"></div>
+    </div>
+
+    <div class="field">
+      <label for="tBsp"><span class="name">Margen del BSP</span><span class="hint">USD / mensaje</span></label>
+      <div class="money"><span class="sign">US$</span><input class="inp" type="number" id="tBsp" value="0.005" min="0" step="0.001"></div>
+    </div>
+
+    <div class="field" style="margin-bottom:0">
+      <label for="tc"><span class="name">Tipo de cambio</span><span class="hint">MXN por USD</span></label>
+      <input class="inp" type="number" id="tc" value="18.50" min="1" step="0.1">
+    </div>
+  </form>
+
+  <div class="out">
+    <div class="verdict">
+      <span class="vtag"><i></i><span>Costo variable estimado</span></span>
+      <h2 class="vhead" id="vhead">—<span class="cur">MXN / mes</span></h2>
+      <p class="vbody" id="vbody"></p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">Mensajes gratis</div><div class="v free" id="s1">—<span class="u">%</span></div></div>
+      <div class="stat"><div class="k">Costo por conversación</div><div class="v" id="s2">—</div></div>
+      <div class="stat"><div class="k">Al año</div><div class="v" id="s3">—</div></div>
+    </div>
+
+    <div class="split">
+      <p class="lbl" style="margin-bottom:12px">Reparto de tus mensajes</p>
+      <div class="sptrack" id="sptrack">
+        <div class="sp" style="background:var(--ok)"><span id="lbl0"></span></div>
+        <div class="sp" style="background:var(--acc);opacity:.5"><span id="lbl1"></span></div>
+        <div class="sp" style="background:var(--acc)"><span id="lbl2"></span></div>
+        <div class="sp" style="background:var(--ok);opacity:.45"><span id="lbl3"></span></div>
+      </div>
+      <div class="splegend" id="splegend"></div>
+    </div>
+
+    <div class="tblhead">
+      <h3>Desglose mensual</h3>
+      <p>Las tarifas son de Meta y las cobra Meta. Quien te implemente el bot no debería marcarlas.</p>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Categoría</th><th>Volumen</th><th>USD c/u</th><th>MXN</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <div class="note">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <p><strong>Estos precios caducan.</strong> Meta cambió el tarifario dos veces en doce meses y la última actualización entró en vigor el 1 de julio de 2026. Las cifras cargadas por defecto son un punto de partida, no una cotización: abre el tarifario vigente de Meta para México el día que cotices y sustitúyelas. Cualquier herramienta que te dé un número fijo sin dejarte editarlo está mintiendo por omisión.</p>
+    </div>
+  </div>
+</div>
+
+<section class="method">
+  <p class="lbl">Cómo se cobra</p>
+  <div class="mgrid">
+    <div>
+      <h4>Servicio — gratis</h4>
+      <p>Todo lo que respondes dentro de la ventana de 24 horas que abre el cliente al escribirte. Aquí vive casi todo el tráfico de un bot de atención, y por eso un chatbot bien planteado cuesta mucho menos de lo que la gente supone.</p>
+    </div>
+    <div>
+      <h4>Utility — barato</h4>
+      <p>Confirmaciones de pedido, avisos de envío, recordatorios de cita. Del orden del 10 al 20% del precio de un mensaje de marketing, y tiene descuentos por volumen.</p>
+    </div>
+    <div>
+      <h4>Marketing — el que cuesta</h4>
+      <p>Promociones y difusión. Sin descuentos por volumen. Es la categoría que dispara la factura, y la que más se subestima al cotizar.</p>
+    </div>
+    <div>
+      <h4>Click-to-WhatsApp — gratis 72 h</h4>
+      <p>Las conversaciones que nacen de un anuncio no se cobran durante las primeras 72 horas. Si el negocio ya invierte en pauta, es la palanca de costo más grande que tiene disponible y casi nadie la usa a propósito.</p>
+    </div>
+  </div>
+
+  <div class="mgrid" style="margin-top:34px">
+    <div>
+      <h4>Antes de cotizar, revisa esto</h4>
+      <ul>
+        <li>Verificación de negocio completada en Meta Business Manager</li>
+        <li><strong style="color:var(--ink)">2FA activado</strong> — sin esto no avanza el trámite</li>
+        <li>Nombre para mostrar aprobado por Meta</li>
+        <li>Documentación con datos <strong style="color:var(--ink)">idénticos</strong> al registro legal</li>
+        <li>La línea siempre a nombre del cliente, nunca de la agencia</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Cuánto tarda</h4>
+      <p><strong style="color:var(--ink)">2 a 5 días hábiles</strong> si la documentación coincide exactamente con el registro legal. Hasta <strong style="color:var(--ink)">14 días</strong> si hay documentos incompletos. De 2 a 4 semanas de extremo a extremo para un onboarding completo.</p>
+      <p style="margin-top:10px">La causa número uno de retraso es que el nombre o el domicilio no coinciden con el registro legal. Revísalo tú antes de enviar.</p>
+    </div>
+    <div>
+      <h4>No necesitas un número nuevo</h4>
+      <p>Meta permite a negocios elegibles seguir usando la app de WhatsApp Business <em>y</em> conectar el mismo número a la Cloud API. Se llama Coexistence.</p>
+      <p style="margin-top:10px">Pregunta si aplica antes de que alguien te pida conseguir una línea aparte: conservar el número que ya está impreso en tu publicidad vale más que cualquier ahorro del trámite.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<footer><div class="wrap"><div class="fgrid">
+  <div class="fcta">
+    <h4 class="disp">¿Te cuadra el número?</h4>
+    <p>Si quieres, reviso tu volumen real de conversaciones y te digo qué parte se puede automatizar sin que la factura se dispare. Sin que tengas que contratar nada.</p>
+    <a class="btn" href="https://navamkt.com/es/contact">Hablemos</a>
+  </div>
+  <div class="fmeta">
+    <div>navamkt · <a href="https://navamkt.com">navamkt.com</a></div>
+    <div>Herramienta 03 de 8</div>
+    <div>Tarifario de referencia: julio 2026</div>
+  </div>
+</div></div></footer>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const nf  = new Intl.NumberFormat('es-MX');
+  const mxn = n => '$' + nf.format(Math.round(n));
+  const usd = n => n.toFixed(4);
+
+  function pintar(){
+    const ent   = Math.max(+$('entrantes').value || 0, 0);
+    const util  = Math.max(+$('utility').value   || 0, 0);
+    const mkt   = Math.max(+$('marketing').value || 0, 0);
+    const pctAd = (+$('ctwa').value || 0) / 100;
+    const tMkt  = Math.max(+$('tMkt').value  || 0, 0);
+    const tUtil = Math.max(+$('tUtil').value || 0, 0);
+    const tBsp  = Math.max(+$('tBsp').value  || 0, 0);
+    const tc    = Math.max(+$('tc').value    || 0, 1);
+
+    $('ctwaVal').textContent = Math.round(pctAd * 100);
+
+    // Los click-to-WhatsApp no se cobran las primeras 72 h
+    const mktGratis = Math.round(mkt * pctAd);
+    const mktCobra  = mkt - mktGratis;
+
+    // El BSP cobra por mensaje de plantilla, incluidos los que Meta no cobra
+    const plantillas = util + mkt;
+    const cUtil = util * tUtil;
+    const cMkt  = mktCobra * tMkt;
+    const cBsp  = plantillas * tBsp;
+    const totUsd = cUtil + cMkt + cBsp;
+    const totMxn = totUsd * tc;
+
+    const gratis = ent + mktGratis;
+    const totalMsj = ent + util + mkt;
+    const pctGratis = totalMsj ? (gratis / totalMsj) * 100 : 0;
+
+    $('vhead').innerHTML = mxn(totMxn) + '<span class="cur">MXN / mes</span>';
+    $('s1').innerHTML = Math.round(pctGratis) + '<span class="u">%</span>';
+    $('s2').textContent = totalMsj ? '$' + (totMxn / totalMsj).toFixed(2) : '$0';
+    $('s3').textContent = mxn(totMxn * 12);
+
+    $('vbody').innerHTML = ent > 0
+      ? `<strong>${nf.format(ent)}</strong> de tus <strong>${nf.format(totalMsj)}</strong> mensajes no cuestan nada: entran por la ventana de servicio de 24 horas que abre el cliente al escribirte. Lo que ves arriba son ${nf.format(util + mktCobra)} plantillas que tú inicias, más el margen del BSP. En dólares: <strong>US$${totUsd.toFixed(2)}</strong>.`
+      : `Todo tu volumen es saliente, que es el caso más caro. En dólares: <strong>US$${totUsd.toFixed(2)}</strong>. Si el bot además atiende a quien escribe primero, ese tráfico entra gratis por la ventana de servicio.`;
+
+    // Barra apilada por volumen de mensajes; el costo de cada tramo va en la leyenda
+    const seg = [
+      { n: ent,       cost: 0,           color: 'var(--ok)',            op: 1,   txt: 'Servicio · 24 h' },
+      { n: util,      cost: cUtil * tc,  color: 'var(--acc)',           op: .5,  txt: 'Utility' },
+      { n: mktCobra,  cost: cMkt  * tc,  color: 'var(--acc)',           op: 1,   txt: 'Marketing' },
+      { n: mktGratis, cost: 0,           color: 'var(--ok)',            op: .45, txt: 'Marketing · vía anuncio' }
+    ];
+    const nodos = $('sptrack').children;
+    seg.forEach((s, i) => {
+      const pct = totalMsj ? (s.n / totalMsj) * 100 : 0;
+      nodos[i].style.width = pct.toFixed(2) + '%';
+      $('lbl' + i).textContent = pct >= 11 ? Math.round(pct) + '%' : '';
+    });
+    $('splegend').innerHTML = seg.filter(s => s.n > 0).map(s =>
+      `<div><i style="background:${s.color};opacity:${s.op}"></i>${s.txt} · ${s.cost ? mxn(s.cost) : '<span class="free">gratis</span>'}</div>`
+    ).join('') + `<div style="opacity:.75"><i style="background:var(--mut);opacity:.5"></i>Margen BSP · ${mxn(cBsp * tc)}</div>`;
+
+    const filas = [
+      ['Servicio <span style="opacity:.6">· ventana 24 h</span>', ent, '0.0000', '<span class="free">gratis</span>'],
+      ['Utility', util, usd(tUtil), mxn(cUtil * tc)],
+      ['Marketing' + (mktGratis ? ' <span style="opacity:.6">· cobrados</span>' : ''), mktCobra, usd(tMkt), mxn(cMkt * tc)]
+    ];
+    if (mktGratis) filas.push(['Marketing <span style="opacity:.6">· vía anuncio</span>', mktGratis, '0.0000', '<span class="free">gratis</span>']);
+    filas.push(['Margen del BSP', plantillas, usd(tBsp), mxn(cBsp * tc)]);
+
+    $('rows').innerHTML = filas.map(r =>
+      `<tr><td>${r[0]}</td><td>${nf.format(r[1])}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`
+    ).join('') + `<tr class="total"><td>Total</td><td>${nf.format(totalMsj)}</td><td>US$${totUsd.toFixed(2)}</td><td>${mxn(totMxn)}</td></tr>`;
+  }
+
+  $('f').addEventListener('input', pintar);
+
+  const guardado = localStorage.getItem('navamkt-tema');
+  if (guardado) document.documentElement.dataset.theme = guardado;
+  $('theme').addEventListener('click', () => {
+    const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('navamkt-tema', t);
+  });
+
+  pintar();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrilla editorial de un mes en cinco minutos — navamkt</title>
+<meta name="description" content="Define tus pilares de contenido y genera un calendario mensual equilibrado, con formato y ángulo por publicación. Exportable a CSV.">
+<meta property="og:title" content="Parrilla editorial de un mes en cinco minutos">
+<meta property="og:description" content="Pilares, formatos y días de publicación. El calendario se arma solo y sale balanceado.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:hsl(253 20% 4.5%); --srf:hsl(252 15% 7.5%); --srf2:hsl(252 13% 10.5%);
+  --line:hsl(250 30% 90% / .09); --ink:hsl(40 20% 95%); --mut:hsl(248 10% 62%);
+  --acc:#8B5CF6; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  --disp:'Outfit',system-ui,sans-serif;
+  --body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --p0:#8B5CF6; --p1:#34d399; --p2:#fbbf24; --p3:#60a5fa; --p4:#f472b6; --p5:#fb923c;
+}
+html[data-theme="light"]{
+  --bg:hsl(40 30% 98.5%); --srf:hsl(0 0% 100%); --srf2:hsl(40 22% 95.5%);
+  --line:hsl(250 30% 15% / .11); --ink:hsl(250 20% 8%); --mut:hsl(248 8% 42%);
+  --ok:#059669; --warn:#b45309; --bad:#dc2626;
+  --p1:#059669; --p2:#b45309; --p3:#2563eb; --p4:#db2777; --p5:#ea580c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:color-mix(in srgb,var(--acc) 28%,transparent)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.disp{font-family:var(--disp);letter-spacing:-.03em;font-weight:700;line-height:1.1}
+.lbl{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+
+.top{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.themebtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s}
+.themebtn:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 50%,transparent)}
+
+header{padding:64px 0 40px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:96px 100%;mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);-webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 90%);pointer-events:none}
+header .wrap{position:relative}
+h1{font-size:clamp(30px,5vw,50px);margin:14px 0 18px;max-width:17ch}
+.sub{color:var(--mut);font-size:17px;max-width:60ch}
+.sub strong{color:var(--ink);font-weight:600}
+
+.grid{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:940px){.grid{grid-template-columns:1fr}}
+.card{background:var(--srf);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:16px}
+.chead{padding:17px 22px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.chead h2{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:-.01em}
+.chead p{color:var(--mut);font-size:12.5px;margin-top:2px}
+.cbody{padding:20px 22px}
+.blk{margin-bottom:20px}
+.blk:last-child{margin-bottom:0}
+.blk>.lbl{display:block;margin-bottom:11px}
+
+/* ─── Pilares ─── */
+.pil{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pil .sw{width:9px;height:26px;border-radius:3px;flex-shrink:0}
+.pil input{flex:1;min-width:0;background:transparent;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:var(--body);color:var(--ink);outline:none;transition:border-color .2s}
+.pil input:focus{border-color:var(--acc)}
+.pil .wt{display:flex;background:var(--srf2);border-radius:7px;overflow:hidden;flex-shrink:0}
+.pil .wt button{border:none;background:transparent;color:var(--mut);font-family:var(--mono);font-size:11px;width:22px;height:28px;cursor:pointer;transition:background .16s,color .16s}
+.pil .wt button[aria-pressed="true"]{background:var(--acc);color:#fff}
+.pil .del{border:none;background:transparent;color:var(--mut);cursor:pointer;font-size:16px;line-height:1;padding:3px 5px;flex-shrink:0;transition:color .18s}
+.pil .del:hover{color:var(--bad)}
+
+.toggles{display:flex;flex-wrap:wrap;gap:6px}
+.tg{border:1px solid var(--line);background:transparent;color:var(--mut);font-family:var(--body);font-size:12.5px;padding:7px 12px;border-radius:8px;cursor:pointer;transition:all .18s}
+.tg:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--ink)}
+.tg[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.tg.day{min-width:44px;text-align:center;font-family:var(--mono);font-size:11.5px;padding:7px 8px}
+
+.inp{width:100%;background:transparent;border:1px solid var(--line);border-radius:9px;padding:10px 13px;font-size:14px;font-family:var(--mono);color:var(--ink);outline:none;transition:border-color .2s;color-scheme:dark}
+html[data-theme="light"] .inp{color-scheme:light}
+.inp:focus{border-color:var(--acc)}
+.pbtn{border:1px solid var(--line);background:transparent;color:var(--mut);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:9px 14px;border-radius:8px;cursor:pointer;transition:all .18s}
+.pbtn:hover{border-color:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--ink)}
+.pbtn.main{background:var(--acc);border-color:var(--acc);color:#fff}
+.pbtn.main:hover{filter:brightness(1.12)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.warn{display:flex;gap:9px;align-items:flex-start;background:color-mix(in srgb,var(--warn) 10%,transparent);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:9px;padding:11px 13px;margin-top:12px;font-size:12.5px;color:var(--mut)}
+.warn b{color:var(--ink);font-weight:600}
+
+/* ─── Calendario ─── */
+.calwrap{overflow-x:auto}
+.cal{width:100%;border-collapse:collapse;min-width:640px;table-layout:fixed}
+.cal th{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--mut);padding:11px 6px;border-bottom:1px solid var(--line);font-weight:500}
+.cal td{border:1px solid var(--line);border-left:none;border-top:none;vertical-align:top;height:96px;padding:7px}
+.cal td:first-child{border-left:none}
+.cal td.off{background:color-mix(in srgb,var(--srf2) 55%,transparent)}
+.daynum{font-family:var(--mono);font-size:10.5px;color:var(--mut);display:block;margin-bottom:6px}
+.slot{border-radius:7px;padding:6px 8px;margin-bottom:5px;font-size:11px;line-height:1.35;border-left:3px solid var(--pc)}
+.slot b{display:block;font-weight:600;font-size:11.5px;color:var(--ink);margin-bottom:1px}
+.slot span{display:block;color:var(--mut);font-family:var(--mono);font-size:9.5px;letter-spacing:.03em}
+
+/* ─── Balance ─── */
+.bal{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:22px;padding:22px}
+.balcol h4{font-family:var(--disp);font-size:13px;font-weight:700;margin-bottom:12px}
+.balrow{display:grid;grid-template-columns:1fr 74px 40px;align-items:center;gap:10px;margin-bottom:7px;font-size:12.5px}
+.balbar{height:7px;background:var(--srf2);border-radius:20px;overflow:hidden}
+.balbar i{display:block;height:100%;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+.balval{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right}
+.tot{padding:0 22px 22px;color:var(--mut);font-size:13px}
+.tot b{color:var(--ink);font-weight:600}
+
+.method{margin:44px 0 0;padding:30px 0 0;border-top:1px solid var(--line)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:26px;margin-top:22px}
+.mgrid h4{font-family:var(--disp);font-size:14px;font-weight:700;margin-bottom:8px}
+.mgrid p{color:var(--mut);font-size:13.5px}
+.mgrid p+p{margin-top:10px}
+.mgrid ul{margin:9px 0 0;padding-left:17px;color:var(--mut);font-size:13px}
+.mgrid li{margin-bottom:6px}
+.mgrid li::marker{color:var(--acc)}
+.mgrid strong{color:var(--ink);font-weight:600}
+
+footer{margin-top:56px;border-top:1px solid var(--line);padding:36px 0 52px}
+.fgrid{display:flex;flex-wrap:wrap;gap:26px;justify-content:space-between;align-items:flex-end}
+.fcta h4{font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em;margin-bottom:7px;max-width:30ch}
+.fcta p{color:var(--mut);font-size:13.5px;max-width:48ch;margin-bottom:16px}
+.btn{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;padding:12px 22px;border-radius:9px;transition:filter .2s}
+.btn:hover{filter:brightness(1.12)}
+.fmeta{font-family:var(--mono);font-size:10.5px;color:var(--mut);letter-spacing:.05em;line-height:2}
+.fmeta a{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <a class="brand" href="https://navamkt.com"><span class="dot"></span>navamkt</a>
+  <button class="themebtn" id="theme" title="Cambiar tema" aria-label="Cambiar tema">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div></div>
+
+<header><div class="wrap">
+  <p class="lbl">Herramienta 07 · Social Media</p>
+  <h1 class="disp">Una parrilla editorial de un mes en cinco minutos</h1>
+  <p class="sub">Publicar sin pilares definidos produce un feed que no acumula nada: cada post empieza de cero. Define <strong>de tres a cinco pilares</strong>, marca tus días, y el calendario sale equilibrado con formato y ángulo asignados.</p>
+</div></div></header>
+
+<div class="wrap">
+<div class="grid">
+
+  <div>
+    <div class="card">
+      <div class="chead"><div><h2>Pilares de contenido</h2><p>De qué hablas cuando hablas de tu negocio.</p></div></div>
+      <div class="cbody">
+        <div id="pilares"></div>
+        <div class="btnrow" style="margin-top:11px"><button class="pbtn" id="addp">+ Pilar</button></div>
+        <div class="warn" id="warnPil" hidden><span>⚠</span><div><b>Más de cinco pilares.</b> Con esa dispersión, la audiencia no llega a asociarte con ninguno. Tres a cinco es el rango donde el feed empieza a construir una idea reconocible.</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chead"><div><h2>Producción</h2></div></div>
+      <div class="cbody">
+        <div class="blk">
+          <span class="lbl">Formatos que sí puedes producir</span>
+          <div class="toggles" id="formatos"></div>
+        </div>
+        <div class="blk">
+          <span class="lbl">Días de publicación</span>
+          <div class="toggles" id="dias"></div>
+        </div>
+        <div class="blk">
+          <span class="lbl">Mes</span>
+          <input class="inp" type="month" id="mes">
+        </div>
+        <div class="btnrow">
+          <button class="pbtn main" id="regen">Regenerar</button>
+          <button class="pbtn" id="csv">Exportar CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="chead"><div><h2 id="calTitle">Calendario</h2><p>Cada bloque es un espacio, no un post escrito. El gancho lo pones tú.</p></div></div>
+      <div class="calwrap">
+        <table class="cal">
+          <thead><tr><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th></tr></thead>
+          <tbody id="cal"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chead"><div><h2>Balance del mes</h2><p>Si un pilar se come el calendario, el feed cuenta una sola historia.</p></div></div>
+      <div class="bal">
+        <div class="balcol"><h4>Por pilar</h4><div id="balPil"></div></div>
+        <div class="balcol"><h4>Por formato</h4><div id="balFor"></div></div>
+      </div>
+      <p class="tot" id="tot"></p>
+    </div>
+  </div>
+</div>
+
+<section class="method">
+  <p class="lbl">Lo que hay que definir antes de publicar</p>
+  <div class="mgrid">
+    <div>
+      <h4>Quién responde los mensajes</h4>
+      <p>Es la fuente de conflicto número uno en social media, y casi nunca se acuerda por escrito. Déjalo explícito desde el primer día: <strong>quién contesta los directos, en qué horario, y qué pasa fuera de ese horario.</strong></p>
+      <p>Un feed impecable con mensajes sin responder tres días es peor que no publicar.</p>
+    </div>
+    <div>
+      <h4>Aprobación por lotes, no post por post</h4>
+      <p>Aprobar publicación por publicación consume más horas que producirlas, y multiplica los tiempos muertos esperando respuesta.</p>
+      <p><strong>Aprueba lotes quincenales.</strong> Dos revisiones al mes contra veinte hilos de correo — y el calendario deja de depender de que alguien conteste hoy.</p>
+    </div>
+    <div>
+      <h4>Quién genera el material crudo</h4>
+      <p>Fotos del local, video del proceso, producto nuevo. Si nadie tiene esa tarea asignada, la parrilla se llena de gráficos genéricos en la segunda semana.</p>
+      <p>Un acuerdo que funciona: una sesión de captura al mes, con lista de tomas hecha a partir de la parrilla. Por eso conviene generarla antes.</p>
+    </div>
+  </div>
+  <div class="mgrid" style="margin-top:32px">
+    <div>
+      <h4>Sobre los ángulos</h4>
+      <p>Cada espacio trae un ángulo asignado — cómo se hace, error común, antes y después, pregunta frecuente. No es relleno: es lo que evita que los cinco posts del pilar "servicios" sean el mismo post cinco veces.</p>
+      <p>Si un ángulo no te cuadra para ese pilar, regenera. El orden cambia y los pesos se respetan.</p>
+    </div>
+    <div>
+      <h4>Los pesos</h4>
+      <p>El número al lado de cada pilar dice cuánto espacio ocupa. Un pilar en 3 aparece el triple que uno en 1.</p>
+      <p>Sirve para lo obvio y para lo que no lo es tanto: si vendes un servicio y quieres que se note, ese pilar va en 3 — pero si va en 3 <em>todo el tiempo</em>, el feed se convierte en un catálogo y la gente deja de verlo.</p>
+    </div>
+    <div>
+      <h4>Qué no hace esta herramienta</h4>
+      <p>No escribe los copies ni decide los ganchos. Un calendario lleno de texto generado se nota, y en redes eso cuesta más caro que publicar menos.</p>
+      <p>Lo que resuelve es lo que de verdad traba a la mayoría: la página en blanco de "¿de qué publico este mes?" y el desequilibrio que solo se ve cuando el mes ya pasó.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<footer><div class="wrap"><div class="fgrid">
+  <div class="fcta">
+    <h4 class="disp">La parrilla es la parte fácil</h4>
+    <p>Lo difícil es sostenerla cuatro meses seguidos. Si quieres, revisamos tus últimos 90 días por formato y horario y armamos los pilares con lo que ya te funcionó.</p>
+    <a class="btn" href="https://navamkt.com/es/contact">Hablemos</a>
+  </div>
+  <div class="fmeta">
+    <div>navamkt · <a href="https://navamkt.com">navamkt.com</a></div>
+    <div>Herramienta 07 de 8</div>
+    <div>Datos revisados: julio 2026</div>
+  </div>
+</div></div></footer>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const ANGULOS = ['Cómo se hace','Error común','Antes y después','Pregunta frecuente','Detrás de cámaras','Resultado de cliente','Mito vs realidad','Comparativa','Consejo rápido','Historia del negocio'];
+const FORMATOS_BASE = ['Reel','Carrusel','Foto','Historia','En vivo'];
+
+let pilares = [
+  { n:'Servicio o producto', w:2 },
+  { n:'Educativo del sector', w:3 },
+  { n:'Prueba social', w:2 },
+  { n:'Detrás de cámaras', w:1 }
+];
+let formatos = new Set(['Reel','Carrusel','Foto']);
+let diasSel  = new Set([1,3,5]);            // lunes, miércoles, viernes
+let semilla  = 7;
+
+// PRNG con semilla para que "regenerar" dé algo distinto pero reproducible
+function rng(s){ return function(){ s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function barajar(a, r){ const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+
+function pintarPilares(){
+  $('pilares').innerHTML = pilares.map((p, i) => `
+    <div class="pil" data-i="${i}">
+      <span class="sw" style="background:var(--p${i % 6})"></span>
+      <input value="${p.n.replace(/"/g,'&quot;')}" data-i="${i}" placeholder="Nombre del pilar">
+      <span class="wt">${[1,2,3].map(w => `<button type="button" data-w="${w}" data-i="${i}" aria-pressed="${p.w===w}" title="Peso ${w}">${w}</button>`).join('')}</span>
+      ${pilares.length > 1 ? `<button class="del" data-del="${i}" title="Quitar">×</button>` : ''}
+    </div>`).join('');
+  $('warnPil').hidden = pilares.length <= 5;
+}
+
+function pintarToggles(){
+  $('formatos').innerHTML = FORMATOS_BASE.map(f =>
+    `<button type="button" class="tg" data-f="${f}" aria-pressed="${formatos.has(f)}">${f}</button>`).join('');
+  $('dias').innerHTML = DIAS.map((d, i) =>
+    `<button type="button" class="tg day" data-d="${i}" aria-pressed="${diasSel.has(i)}">${d}</button>`).join('');
+}
+
+function fechasDelMes(){
+  const [y, m] = $('mes').value.split('-').map(Number);
+  const ini = new Date(y, m - 1, 1), fin = new Date(y, m, 0);
+  const out = [];
+  for (let d = 1; d <= fin.getDate(); d++){
+    const f = new Date(y, m - 1, d);
+    out.push({ d, dow: (f.getDay() + 6) % 7, fecha: f });   // 0 = lunes
+  }
+  return { out, primerDow: (ini.getDay() + 6) % 7, y, m };
+}
+
+function generar(){
+  const { out, primerDow, y, m } = fechasDelMes();
+  const r = rng(semilla);
+
+  const activos = pilares.filter(p => p.n.trim());
+  const bolsa = [];
+  activos.forEach((p, i) => { for (let k = 0; k < p.w; k++) bolsa.push(i); });
+
+  // Se rebaraja en cada vuelta: si no, el sobrante del último ciclo
+  // favorece siempre a los mismos pilares y el balance se desvía del peso
+  let mazo = [];
+  const siguiente = () => {
+    if (!mazo.length) mazo = bolsa.length ? barajar(bolsa, r) : [0];
+    return mazo.pop();
+  };
+
+  const fmt = [...formatos];
+  const angs = barajar(ANGULOS, r);
+
+  let k = 0;
+  const slots = [];
+  out.forEach(dia => {
+    if (!diasSel.has(dia.dow)) return;
+    const pi = siguiente();
+    slots.push({
+      dia: dia.d,
+      dow: dia.dow,
+      pilar: activos[pi] ? activos[pi].n : 'Sin pilar',
+      pilarIdx: pi,
+      formato: fmt.length ? fmt[k % fmt.length] : '—',
+      angulo: angs[k % angs.length]
+    });
+    k++;
+  });
+
+  pintarCal(slots, out, primerDow, y, m);
+  pintarBalance(slots, activos);
+  return slots;
+}
+
+let ultimos = [];
+
+function pintarCal(slots, dias, primerDow, y, m){
+  const porDia = {};
+  slots.forEach(s => (porDia[s.dia] = porDia[s.dia] || []).push(s));
+
+  let html = '<tr>';
+  for (let i = 0; i < primerDow; i++) html += '<td class="off"></td>';
+  let col = primerDow;
+  dias.forEach(d => {
+    if (col === 7){ html += '</tr><tr>'; col = 0; }
+    const ss = porDia[d.d] || [];
+    html += `<td class="${ss.length ? '' : 'off'}"><span class="daynum">${d.d}</span>` +
+      ss.map(s => `<div class="slot" style="--pc:var(--p${s.pilarIdx % 6});background:color-mix(in srgb,var(--p${s.pilarIdx % 6}) 11%,transparent)"><b>${s.pilar}</b><span>${s.formato} · ${s.angulo}</span></div>`).join('') +
+      '</td>';
+    col++;
+  });
+  while (col < 7 && col > 0){ html += '<td class="off"></td>'; col++; }
+  html += '</tr>';
+  $('cal').innerHTML = html;
+
+  const nombreMes = new Date(y, m - 1, 1).toLocaleDateString('es-MX', { month:'long', year:'numeric' });
+  $('calTitle').textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+  ultimos = slots;
+}
+
+function pintarBalance(slots, activos){
+  const n = slots.length || 1;
+  const cuenta = (arr, key) => arr.reduce((a, s) => (a[s[key]] = (a[s[key]] || 0) + 1, a), {});
+
+  const pp = cuenta(slots, 'pilar');
+  $('balPil').innerHTML = activos.map((p, i) => {
+    const v = pp[p.n] || 0, pct = Math.round(v / n * 100);
+    return `<div class="balrow"><span>${p.n}</span><div class="balbar"><i style="width:${pct}%;background:var(--p${i % 6})"></i></div><span class="balval">${pct}%</span></div>`;
+  }).join('') || '<p style="color:var(--mut);font-size:13px">Sin pilares.</p>';
+
+  const pf = cuenta(slots, 'formato');
+  $('balFor').innerHTML = [...formatos].map(f => {
+    const v = pf[f] || 0, pct = Math.round(v / n * 100);
+    return `<div class="balrow"><span>${f}</span><div class="balbar"><i style="width:${pct}%;background:var(--acc)"></i></div><span class="balval">${pct}%</span></div>`;
+  }).join('') || '<p style="color:var(--mut);font-size:13px">Selecciona al menos un formato.</p>';
+
+  const sem = (slots.length / 4.345).toFixed(1);
+  $('tot').innerHTML = slots.length
+    ? `<b>${slots.length} publicaciones</b> este mes · alrededor de <b>${sem}</b> por semana · ${activos.length} pilares · ${formatos.size} formato${formatos.size === 1 ? '' : 's'}.`
+    : 'Selecciona al menos un día de publicación.';
+}
+
+// ─── Eventos ───
+$('pilares').addEventListener('click', e => {
+  const w = e.target.closest('button[data-w]');
+  if (w){ pilares[+w.dataset.i].w = +w.dataset.w; pintarPilares(); generar(); return; }
+  const d = e.target.closest('button[data-del]');
+  if (d && pilares.length > 1){ pilares.splice(+d.dataset.del, 1); pintarPilares(); generar(); }
+});
+$('pilares').addEventListener('input', e => {
+  const i = e.target.closest('input'); if (!i) return;
+  pilares[+i.dataset.i].n = i.value;
+  generar();
+});
+$('addp').addEventListener('click', () => {
+  if (pilares.length >= 6) return;
+  pilares.push({ n:'', w:1 });
+  pintarPilares(); generar();
+  const ins = $('pilares').querySelectorAll('input');
+  ins[ins.length - 1].focus();
+});
+$('formatos').addEventListener('click', e => {
+  const b = e.target.closest('.tg'); if (!b) return;
+  const f = b.dataset.f;
+  if (formatos.has(f)){ if (formatos.size > 1) formatos.delete(f); } else formatos.add(f);
+  pintarToggles(); generar();
+});
+$('dias').addEventListener('click', e => {
+  const b = e.target.closest('.tg'); if (!b) return;
+  const d = +b.dataset.d;
+  diasSel.has(d) ? diasSel.delete(d) : diasSel.add(d);
+  pintarToggles(); generar();
+});
+$('mes').addEventListener('change', generar);
+$('regen').addEventListener('click', () => { semilla = Math.floor(Math.random() * 1e6); generar(); });
+
+$('csv').addEventListener('click', () => {
+  if (!ultimos.length) return;
+  const [y, m] = $('mes').value.split('-').map(Number);
+  const cab = 'Fecha,Día,Pilar,Formato,Ángulo,Gancho,Estado';
+  const cuerpo = ultimos.map(s => {
+    const f = `${String(s.dia).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+    return [f, DIAS[s.dow], `"${s.pilar}"`, s.formato, `"${s.angulo}"`, '', 'Por escribir'].join(',');
+  }).join('\n');
+  const blob = new Blob(['﻿' + cab + '\n' + cuerpo], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `parrilla-${$('mes').value}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// ─── Arranque ───
+const hoy = new Date();
+$('mes').value = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2,'0')}`;
+pintarPilares(); pintarToggles(); generar();
+
+const guardado = localStorage.getItem('navamkt-tema');
+if (guardado) document.documentElement.dataset.theme = guardado;
+$('theme').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('navamkt-tema', t);
+});
+})();
+</script>
+</body>
+</html>
