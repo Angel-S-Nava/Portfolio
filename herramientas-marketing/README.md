@@ -11,7 +11,9 @@ tener clara la diferencia:
 Las dos versiones comparten la lógica y los umbrales. La de esta carpeta es mejor
 pieza de portafolio justamente porque no necesita nada para correr.
 
-**Índice local:** [`index.html`](index.html) · **En el sitio:** `/es/tools`
+**▶ Pruébalas en vivo:** https://angel-s-nava.github.io/Portfolio/herramientas-marketing/
+
+**En el sitio:** https://navamkt.com/es/tools · **Índice local:** [`index.html`](index.html)
 
 ---
 
